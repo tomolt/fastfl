@@ -5,6 +5,8 @@
 
 #include "arg.h"
 
+extern int graphml_read(const char *filename);
+
 char *argv0;
 
 static void
@@ -21,6 +23,15 @@ main(int argc, char **argv)
 	default:
 		usage();
 	} ARGEND
+
+	if (argc != 1) {
+		usage();
+	}
+	if (graphml_read(*argv) < 0) {
+		fprintf(stderr, "Error reading GraphML file.\n");
+		exit(1);
+	}
+
 	return 0;
 }
 

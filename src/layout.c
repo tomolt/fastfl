@@ -90,7 +90,7 @@ ffl_apply_forces(FFL_Graph *graph)
 }
 
 void
-ffl_compute_layout(FFL_Graph *graph)
+ffl_compute_layout(FFL_Graph *graph, const FFL_Settings *settings)
 {
 	const int TOTAL_ROUNDS = 50;
 
@@ -98,8 +98,8 @@ ffl_compute_layout(FFL_Graph *graph)
 
 	int rounds = TOTAL_ROUNDS;
 	while (rounds--) {
-		ffl_spring_forces(graph, 1.0f);
-		ffl_repulsion_forces(graph, 1.0f);
+		ffl_spring_forces(graph, settings->spring_strength);
+		ffl_repulsion_forces(graph, settings->repulsion_strength);
 		ffl_apply_forces(graph);
 	}
 }
