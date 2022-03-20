@@ -1,8 +1,11 @@
 #include <fastfl.h>
 
 #include <stdbool.h>
+#include <math.h>
 
 #include "realloc.h"
+
+#define FFL_PI 3.14159265358979323846
 
 typedef struct FFL_Vertex FFL_Vertex;
 typedef struct FFL_Edge   FFL_Edge;
@@ -17,7 +20,7 @@ struct FFL_Vertex {
 struct FFL_Edge {
 	int   source;
 	int   target;
-	float weight;
+	float dlength; /* desired length */
 };
 
 struct FFL_Graph {
@@ -30,6 +33,18 @@ struct FFL_Graph {
 static void
 ffl_initial_layout(FFL_Graph *graph)
 {
+	float radius = (float) graph->nverts / 2.0f;
+
+	for (int v = 0; v < graph->nverts; v++) {
+		FFL_Vertex *vert = &graph->verts[v];
+		float angle = (float) v / graph->nverts * 2.0f * FFL_PI;
+
+		vert->x = radius * cosf(angle);
+		vert->y = radius * sinf(angle);
+
+		vert->forcex = 0.0f;
+		vert->forcey = 0.0f;
+	}
 }
 
 static void
@@ -42,36 +57,43 @@ ffl_spring_forces(FFL_Graph *graph, float strength)
 
 		float dx = target->x - source->x;
 		float dy = target->y - source->y;
+		float dlen = sqrtf(dx * dx + dy * dy);
+		if (dlen == 0.0f) continue;
+		dx /= dlen;
+		dy /= dlen;
 
-		source->forcex += dx * strength;
-		source->forcey += dy * strength;
+		float force = strength * logf(dlen / edge->dlength) * dlen * dlen;
 
-		target->forcex -= dx * strength;
-		target->forcey -= dy * strength;
+		source->forcex += dx * force;
+		source->forcey += dy * force;
+
+		target->forcex -= dx * force;
+		target->forcey -= dy * force;
 	}
 }
 
 static void
 ffl_repulsion_forces(FFL_Graph *graph, float strength)
 {
-	for (int a = 0; a < graph->nverts; a++) {
-		for (int b = 0; b < graph->nverts; b++) {
+	for (int t = 0; t < graph->nverts; t++) {
+		FFL_Vertex *target = &graph->verts[t];
+		for (int s = 0; s < graph->nverts; s++) {
+			if (t == s) continue;
 
+			FFL_Vertex *source = &graph->verts[s];
+
+			float dx = target->x - source->x;
+			float dy = target->y - source->y;
+			float dlen = sqrtf(dx * dx + dy * dy);
+			if (dlen == 0.0f) continue;
+			dx /= dlen;
+			dy /= dlen;
+
+			float force = strength / dlen;
+
+			target->forcex += dx * force;
+			target->forcey += dy * force;
 		}
-	}
-}
-
-static void
-ffl_cohesion_force(FFL_Graph *graph, float centerx, float centery, float strength)
-{
-	for (int v = 0; v < graph->nverts; v++) {
-		FFL_Vertex *vert = &graph->verts[v];
-		
-		float dx = vert->x - centerx;
-		float dy = vert->y - centery;
-
-		vert->forcex -= dx;
-		vert->forcey -= dy;
 	}
 }
 
@@ -80,8 +102,10 @@ ffl_apply_forces(FFL_Graph *graph)
 {
 	for (int v = 0; v < graph->nverts; v++) {
 		FFL_Vertex *vert = &graph->verts[v];
+
 		vert->x += vert->forcex;
 		vert->y += vert->forcey;
+		
 		vert->forcex = 0.0f;
 		vert->forcey = 0.0f;
 	}
@@ -96,9 +120,8 @@ ffl_compute_layout(FFL_Graph *graph)
 
 	int rounds = TOTAL_ROUNDS;
 	while (rounds--) {
-		ffl_spring_forces(graph, );
-		ffl_repulsion_forces(graph, );
-		ffl_cohesion_force(graph, );
+		ffl_spring_forces(graph, 1.0f);
+		ffl_repulsion_forces(graph, 1.0f);
 		ffl_apply_forces(graph);
 	}
 }
