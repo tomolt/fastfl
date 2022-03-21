@@ -1,16 +1,19 @@
 #include <stdio.h>
+#include <string.h>
 
 #include <expat.h>
 #include <fastfl.h>
 
 #include "realloc.h"
 #include "graph.h"
+#include "dict.h"
 
 #define READ_BUFFER_SIZE 4096
 #define STACK_SIZE 10
+#define TEXT_SIZE 256
 
 #define BAIL(state) XML_StopParser(state->xp, XML_FALSE)
-#define PUSHEL(state,el) state->stack[state->head] = el
+#define PUSHEL(state,el) state->stack[++state->stack_head] = el
 
 typedef struct GML_State GML_State;
 
@@ -19,6 +22,7 @@ enum {
 	EL_GRAPHML,
 	EL_GRAPH,
 	EL_KEY,
+	EL_DEFAULT,
 	EL_NODE,
 	EL_DATA,
 	EL_EDGE,
@@ -27,20 +31,29 @@ enum {
 
 struct GML_State {
 	XML_Parser xp;
-	int status;
-	int head;
+	
+	int stack_head;
 	int stack[STACK_SIZE];
+
+	int  text_length;
+	char text[TEXT_SIZE];
+	
+	FFL_Dict key_dict;
+	FFL_Dict node_dict;
+
+	int cur_node;
+	int cur_edge;
 };
 
 static void
-start(void *data, const XML_Char *elem, const XML_Char **attr)
+process_start_tag(void *data, const XML_Char *elem, const XML_Char **attr)
 {
 	GML_State *state = data;
-	if (state->head >= STACK_SIZE - 1) {
+	if (state->stack_head >= STACK_SIZE - 1) {
 		BAIL(state);
 		return;
 	}
-	switch (state->stack[state->head]) {
+	switch (state->stack[state->stack_head]) {
 	case EL_NONE:
 		if (!strcmp(elem, "graphml")) {
 			PUSHEL(state, EL_GRAPHML);
@@ -60,30 +73,28 @@ start(void *data, const XML_Char *elem, const XML_Char **attr)
 	case EL_GRAPH:
 		if (!strcmp(elem, "key")) {
 			PUSHEL(state, EL_KEY);
-			for (int i = 0; attrs[i]; i += 2) {
-				if (!strcmp(attrs[i], "id")) {
+			for (int i = 0; attr[i]; i += 2) {
+				if (!strcmp(attr[i], "id")) {
 				}
-				if (!strcmp(attrs[i], "for")) {
+				if (!strcmp(attr[i], "for")) {
 				}
-				if (!strcmp(attrs[i], "attr.name")) {
+				if (!strcmp(attr[i], "attr.name")) {
 				}
-				if (!strcmp(attrs[i], "attr.type")) {
+				if (!strcmp(attr[i], "attr.type")) {
 				}
 			}
 		} else if (!strcmp(elem, "node")) {
 			PUSHEL(state, EL_NODE);
-			for (int i = 0; attrs[i]; i += 2) {
-				if (!strcmp(attrs[i], "id")) {
+			for (int i = 0; attr[i]; i += 2) {
+				if (!strcmp(attr[i], "id")) {
 				}
 			}
 		} else if (!strcmp(elem, "edge")) {
 			PUSHEL(state, EL_EDGE);
-			for (int i = 0; attrs[i]; i += 2) {
-				if (!strcmp(attrs[i], "id")) {
+			for (int i = 0; attr[i]; i += 2) {
+				if (!strcmp(attr[i], "source")) {
 				}
-				if (!strcmp(attrs[i], "source")) {
-				}
-				if (!strcmp(attrs[i], "target")) {
+				if (!strcmp(attr[i], "target")) {
 				}
 			}
 		} else {
@@ -93,13 +104,14 @@ start(void *data, const XML_Char *elem, const XML_Char **attr)
 
 	case EL_NODE:
 		if (!strcmp(elem, "data")) {
-			PUSHEL(EL_DATA);
-			for (int i = 0; attrs[i]; i += 2) {
-				if (!strcmp(attrs[i], "key")) {
+			PUSHEL(state, EL_DATA);
+			for (int i = 0; attr[i]; i += 2) {
+				if (!strcmp(attr[i], "key")) {
 				}
 			}
+			state->text_length = 0;
 		} else {
-			PUSHEL(UL_UNKNOWN);
+			PUSHEL(state, EL_UNKNOWN);
 		}
 		break;
 
@@ -109,16 +121,30 @@ start(void *data, const XML_Char *elem, const XML_Char **attr)
 }
 
 static void
-text(void *data, const XML_Char *str, int len)
+process_text(void *data, const XML_Char *str, int len)
 {
+	GML_State *state = data;
+	switch (state->stack[state->stack_head]) {
+	case EL_DATA:
+		if (state->text_length + len > TEXT_SIZE) {
+			BAIL(state);
+		}
+		memcpy(state->text + state->text_length, str, len);
+		state->text_length += len;
+		break;
+
+	default:
+	}
 }
 
 static void
-end(void *data, const XML_Char *elem)
+process_end_tag(void *data, const XML_Char *elem)
 {
 	(void) elem;
 	GML_State *state = data;
-	state->head--;
+	printf("Element '%s' had text:%.*s\n", elem, state->text_length, state->text);
+	state->stack_head--;
+	state->text_length = 0;
 }
 
 int
@@ -126,11 +152,13 @@ graphml_read(const char *filename)
 {
 	int status = 0;
 	GML_State state = { 0 };
+	state.stack[0] = EL_NONE;
+	ffl_dict_init(&state.node_dict, 16);
 
-	XML_Parser xp = XML_ParserCreate(NULL);
-	XML_SetUserData(xp, &state);
-	XML_SetElementHandler(xp, start, end);
-	XML_SetCharacterDataHandler(xp, text);
+	state.xp = XML_ParserCreate(NULL);
+	XML_SetUserData(state.xp, &state);
+	XML_SetElementHandler(state.xp, process_start_tag, process_end_tag);
+	XML_SetCharacterDataHandler(state.xp, process_text);
 
 	FILE *file = fopen(filename, "r");
 	if (!file) {
@@ -139,7 +167,7 @@ graphml_read(const char *filename)
 	}
 
 	do {
-		void *buf = XML_GetBuffer(xp, READ_BUFFER_SIZE);
+		void *buf = XML_GetBuffer(state.xp, READ_BUFFER_SIZE);
 		if (!buf) {
 			status = -1;
 			break;
@@ -151,14 +179,15 @@ graphml_read(const char *filename)
 			break;
 		}
 
-		if (!XML_ParseBuffer(xp, got, feof(file))) {
+		if (!XML_ParseBuffer(state.xp, got, feof(file))) {
 			status = -1;
 			break;
 		}
 	} while (!feof(file));
 
 cleanup:
-	XML_ParserFree(xp);
+	ffl_dict_free(&state.node_dict);
+	XML_ParserFree(state.xp);
 	if (file) fclose(file);
 	return status;
 }
