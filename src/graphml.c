@@ -10,7 +10,7 @@
 #define STACK_SIZE 10
 
 #define BAIL(state) XML_StopParser(state->xp, XML_FALSE)
-#define PUSHEL(state,el) state->stack[state->head] = el;
+#define PUSHEL(state,el) state->stack[state->head] = el
 
 typedef struct GML_State GML_State;
 
