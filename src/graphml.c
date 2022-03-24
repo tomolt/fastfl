@@ -12,11 +12,7 @@
 
 #define BAIL(state) XML_StopParser(state->xp, XML_FALSE)
 
-typedef struct GML_Key   GML_Key;
 typedef struct GML_State GML_State;
-
-struct GML_Key {
-};
 
 struct GML_State {
 	XML_Parser xp;
@@ -24,19 +20,19 @@ struct GML_State {
 	int  text_length;
 	char text[TEXT_SIZE];
 	
-	FFL_Dict key_dict;
 	FFL_Dict node_dict;
 
-	GML_Key *cur_key;
 	int      cur_node;
 	int      cur_edge;
 };
 
-static const char *
+static char *
 store_string(const char *str)
 {
-	// TODO
-	return str;
+	// TODO reduce individual allocations
+	char *ptr = malloc(strlen(str) + 1);
+	strcpy(ptr, str);
+	return ptr;
 }
 
 static const char *
@@ -52,12 +48,12 @@ static void
 process_start_tag(void *data, const XML_Char *elem, const XML_Char **attr)
 {
 	GML_State *state = data;
+	state->text_length = 0;
 	if (!strcmp(elem, "key")) {
-		get_attr(attr, "attr.name");
-		get_attr(attr, "for");
-		get_attr(attr, "attr.type");
-		get_attr(attr, "id");
-		if (!ffl_dict_put(store_string(), )) goto fail;
+		//get_attr(attr, "attr.name");
+		//get_attr(attr, "for");
+		//get_attr(attr, "attr.type");
+		//get_attr(attr, "id");
 	} else if (!strcmp(elem, "default")) {
 	} else if (!strcmp(elem, "node")) {
 		get_attr(attr, "id");
@@ -68,11 +64,10 @@ process_start_tag(void *data, const XML_Char *elem, const XML_Char **attr)
 		if (!s_source || !s_target) goto fail;
 	} else if (!strcmp(elem, "data")) {
 		get_attr(attr, "key");
-		state->text_length = 0;
 	}
 	return;
 fail:
-	XML_StopParser(state->xp);
+	BAIL(state);
 }
 
 static void
@@ -89,13 +84,11 @@ process_text(void *data, const XML_Char *str, int len)
 static void
 process_end_tag(void *data, const XML_Char *elem)
 {
-	(void) elem;
 	GML_State *state = data;
 	if (!strcmp(elem, "default")) {
-		state->text_length = 0;
 	} else if (!strcmp(elem, "data")) {
-		state->text_length = 0;
 	}
+	state->text_length = 0;
 }
 
 int
@@ -103,7 +96,6 @@ graphml_read(const char *filename)
 {
 	int status = 0;
 	GML_State state = { 0 };
-	ffl_dict_init(&state.key_dict, 4);
 	ffl_dict_init(&state.node_dict, 16);
 
 	state.xp = XML_ParserCreate(NULL);
@@ -137,7 +129,6 @@ graphml_read(const char *filename)
 	} while (!feof(file));
 
 cleanup:
-	ffl_dict_free(&state.key_dict);
 	ffl_dict_free(&state.node_dict);
 	XML_ParserFree(state.xp);
 	if (file) fclose(file);
