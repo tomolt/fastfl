@@ -16,7 +16,9 @@ struct FFL_Edge {
 
 struct FFL_Graph {
 	int nverts;
+	int cverts;
 	int nedges;
+	int cedges;
 	FFL_Vertex *verts;
 	FFL_Edge   *edges;
 };

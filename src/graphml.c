@@ -16,15 +16,35 @@ typedef struct GML_State GML_State;
 
 struct GML_State {
 	XML_Parser xp;
+	FFL_Graph *graph;
 	
 	int  text_length;
 	char text[TEXT_SIZE];
 	
 	FFL_Dict node_dict;
-
-	int      cur_node;
-	int      cur_edge;
 };
+
+static int
+ffl_new_node(FFL_Graph *graph)
+{
+	int idx = graph->nverts;
+	if (++graph->nverts > graph->cverts) {
+		graph->cverts *= 2;
+		graph->verts = realloc(graph->verts, graph->cverts * sizeof *graph->verts);
+	}
+	return idx;
+}
+
+static int
+ffl_new_edge(FFL_Graph *graph)
+{
+	int idx = graph->nedges;
+	if (++graph->nedges > graph->cedges) {
+		graph->cedges *= 2;
+		graph->edges = realloc(graph->edges, graph->cedges * sizeof *graph->edges);
+	}
+	return idx;
+}
 
 static char *
 store_string(const char *str)
@@ -49,21 +69,36 @@ process_start_tag(void *data, const XML_Char *elem, const XML_Char **attr)
 {
 	GML_State *state = data;
 	state->text_length = 0;
-	if (!strcmp(elem, "key")) {
+	//if (!strcmp(elem, "key")) {
 		//get_attr(attr, "attr.name");
 		//get_attr(attr, "for");
 		//get_attr(attr, "attr.type");
 		//get_attr(attr, "id");
-	} else if (!strcmp(elem, "default")) {
-	} else if (!strcmp(elem, "node")) {
-		get_attr(attr, "id");
+	//} else if (!strcmp(elem, "default")) {
+	if (!strcmp(elem, "node")) {
+		const char *xid = get_attr(attr, "id");
+		if (!xid) goto fail;
+		char *id = store_string(xid);
+
+		int idx = ffl_new_node(state->graph);
+		if (!ffl_dict_put(&state->node_dict, id, (void *) (uintptr_t) idx)) goto fail;
 	} else if (!strcmp(elem, "edge")) {
-		const char *s_source, *s_target;
-		s_source = get_attr(attr, "source");
-		s_target = get_attr(attr, "target");
-		if (!s_source || !s_target) goto fail;
-	} else if (!strcmp(elem, "data")) {
-		get_attr(attr, "key");
+		void *ptr;
+
+		const char *xsource = get_attr(attr, "source");
+		if (!xsource || !ffl_dict_get(&state->node_dict, xsource, &ptr)) goto fail;
+		int source = (int) (uintptr_t) ptr;
+
+		const char *xtarget = get_attr(attr, "target");
+		if (!xtarget || !ffl_dict_get(&state->node_dict, xtarget, &ptr)) goto fail;
+		int target = (int) (uintptr_t) ptr;
+
+		int idx = ffl_new_edge(state->graph);
+		state->graph->edges[idx].source = source;
+		state->graph->edges[idx].target = target;
+		printf("parsing edge: e%d: v%d -> v%d\n", idx, source, target);
+	//} else if (!strcmp(elem, "data")) {
+		//get_attr(attr, "key");
 	}
 	return;
 fail:
@@ -92,10 +127,18 @@ process_end_tag(void *data, const XML_Char *elem)
 }
 
 int
-graphml_read(const char *filename)
+graphml_read(const char *filename, FFL_Graph *graph)
 {
+	graph->nverts = 0;
+	graph->cverts = 16;
+	graph->verts  = calloc(graph->cverts, sizeof *graph->verts);
+	graph->nedges = 0;
+	graph->cedges = 16;
+	graph->edges  = calloc(graph->cedges, sizeof *graph->edges);
+
 	int status = 0;
 	GML_State state = { 0 };
+	state.graph = graph;
 	ffl_dict_init(&state.node_dict, 16);
 
 	state.xp = XML_ParserCreate(NULL);

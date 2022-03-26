@@ -90,7 +90,7 @@ ffl_dict_get(FFL_Dict *dict, const char *key, void **value)
 		if (!slot->key) return false;
 		if (dib > slot->dib) return false;
 		if (slot->hash == hash && !strcmp(slot->key, key)) {
-			dict->values[idx] = value;
+			*value = dict->values[idx];
 			return true;
 		}
 	}
