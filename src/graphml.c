@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include <expat.h>
 #include <fastfl.h>
@@ -18,6 +19,7 @@ struct GML_State {
 	XML_Parser xp;
 	FFL_Graph *graph;
 	
+	bool text_enable;
 	int  text_length;
 	char text[TEXT_SIZE];
 	
@@ -68,7 +70,6 @@ static void
 process_start_tag(void *data, const XML_Char *elem, const XML_Char **attr)
 {
 	GML_State *state = data;
-	state->text_length = 0;
 	//if (!strcmp(elem, "key")) {
 		//get_attr(attr, "attr.name");
 		//get_attr(attr, "for");
@@ -96,7 +97,6 @@ process_start_tag(void *data, const XML_Char *elem, const XML_Char **attr)
 		int idx = ffl_new_edge(state->graph);
 		state->graph->edges[idx].source = source;
 		state->graph->edges[idx].target = target;
-		printf("parsing edge: e%d: v%d -> v%d\n", idx, source, target);
 	//} else if (!strcmp(elem, "data")) {
 		//get_attr(attr, "key");
 	}
@@ -109,6 +109,7 @@ static void
 process_text(void *data, const XML_Char *str, int len)
 {
 	GML_State *state = data;
+	if (!state->text_enable) return;
 	if (state->text_length + len > TEXT_SIZE) {
 		BAIL(state);
 	}
@@ -123,7 +124,6 @@ process_end_tag(void *data, const XML_Char *elem)
 	if (!strcmp(elem, "default")) {
 	} else if (!strcmp(elem, "data")) {
 	}
-	state->text_length = 0;
 }
 
 int
