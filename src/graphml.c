@@ -15,6 +15,10 @@
 
 typedef struct GML_State GML_State;
 
+enum {
+	ATTR_EDGE_WEIGHT,
+};
+
 struct GML_State {
 	XML_Parser xp;
 	FFL_Graph *graph;
@@ -23,7 +27,10 @@ struct GML_State {
 	int  text_length;
 	char text[TEXT_SIZE];
 	
+	FFL_Dict key_dict;
 	FFL_Dict node_dict;
+
+	float default_edge_weight;
 };
 
 static int
@@ -70,13 +77,21 @@ static void
 process_start_tag(void *data, const XML_Char *elem, const XML_Char **attr)
 {
 	GML_State *state = data;
-	//if (!strcmp(elem, "key")) {
-		//get_attr(attr, "attr.name");
-		//get_attr(attr, "for");
-		//get_attr(attr, "attr.type");
-		//get_attr(attr, "id");
+	if (!strcmp(elem, "key")) {
+		const char *xid = get_attr(attr, "id");
+		if (!xid) goto fail;
+		char *id = store_string(xid);
+
+		const char *xname = get_attr(attr, "attr.name");
+		const char *xfor  = get_attr(attr, "for");
+		const char *xtype = get_attr(attr, "attr.type");
+		if (!xname || !xfor || !xtype) goto fail;
+
+		if (!strcmp(xname, "weight") && !strcmp(xfor, "edge")) {
+			if (!ffl_dict_put(&state->key_dict, id, (void *) (uintptr_t) ATTR_EDGE_WEIGHT)) goto fail;
+		}
 	//} else if (!strcmp(elem, "default")) {
-	if (!strcmp(elem, "node")) {
+	} else if (!strcmp(elem, "node")) {
 		const char *xid = get_attr(attr, "id");
 		if (!xid) goto fail;
 		char *id = store_string(xid);
@@ -121,6 +136,7 @@ static void
 process_end_tag(void *data, const XML_Char *elem)
 {
 	GML_State *state = data;
+	(void) state;
 	if (!strcmp(elem, "default")) {
 	} else if (!strcmp(elem, "data")) {
 	}
@@ -139,6 +155,7 @@ graphml_read(const char *filename, FFL_Graph *graph)
 	int status = 0;
 	GML_State state = { 0 };
 	state.graph = graph;
+	ffl_dict_init(&state.key_dict, 16);
 	ffl_dict_init(&state.node_dict, 16);
 
 	state.xp = XML_ParserCreate(NULL);
@@ -172,6 +189,7 @@ graphml_read(const char *filename, FFL_Graph *graph)
 	} while (!feof(file));
 
 cleanup:
+	ffl_dict_free(&state.key_dict);
 	ffl_dict_free(&state.node_dict);
 	XML_ParserFree(state.xp);
 	if (file) fclose(file);
