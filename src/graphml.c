@@ -27,35 +27,38 @@ struct GML_State {
 	int  text_length;
 	char text[TEXT_SIZE];
 
-	int        cur_attr;
-	FFL_Vertex cur_vert;
-	FFL_Edge   cur_edge;
-	
 	FFL_Dict key_dict;
 	FFL_Dict node_dict;
+
+	int cur_attr;
+	char *cur_id;
+	FFL_Vertex cur_vert;
+	FFL_Edge cur_edge;
 
 	float default_edge_weight;
 };
 
 static int
-ffl_new_node(FFL_Graph *graph)
+ffl_push_vertex(FFL_Graph *graph, FFL_Vertex vertex)
 {
 	int idx = graph->nverts;
 	if (++graph->nverts > graph->cverts) {
 		graph->cverts *= 2;
 		graph->verts = realloc(graph->verts, graph->cverts * sizeof *graph->verts);
 	}
+	graph->verts[idx] = vertex;
 	return idx;
 }
 
 static int
-ffl_new_edge(FFL_Graph *graph)
+ffl_push_edge(FFL_Graph *graph, FFL_Edge edge)
 {
 	int idx = graph->nedges;
 	if (++graph->nedges > graph->cedges) {
 		graph->cedges *= 2;
 		graph->edges = realloc(graph->edges, graph->cedges * sizeof *graph->edges);
 	}
+	graph->edges[idx] = edge;
 	return idx;
 }
 
@@ -82,44 +85,57 @@ process_start_tag(void *data, const XML_Char *elem, const XML_Char **attr)
 {
 	GML_State *state = data;
 	if (!strcmp(elem, "key")) {
-		const char *xid = get_attr(attr, "id");
-		if (!xid) goto fail;
-		char *id = store_string(xid);
-
+		const char *xid   = get_attr(attr, "id");
 		const char *xname = get_attr(attr, "attr.name");
 		const char *xfor  = get_attr(attr, "for");
 		const char *xtype = get_attr(attr, "attr.type");
-		if (!xname || !xfor || !xtype) goto fail;
+		if (!xid || !xname || !xfor || !xtype) goto fail;
+
+		state->cur_id = store_string(xid);
 
 		if (!strcmp(xname, "weight") && !strcmp(xfor, "edge")) {
-			if (!ffl_dict_put(&state->key_dict, id, (void *) (uintptr_t) ATTR_EDGE_WEIGHT)) goto fail;
+			state->cur_attr = ATTR_EDGE_WEIGHT;
+		} else {
+			state->cur_attr = -1;
 		}
-	//} else if (!strcmp(elem, "default")) {
 	} else if (!strcmp(elem, "node")) {
-		memset(&state->cur_vert, 0, sizeof FFL_Vertex);
+		memset(&state->cur_vert, 0, sizeof (FFL_Vertex));
 
 		const char *xid = get_attr(attr, "id");
-		if (!xid) goto fail;
-		char *id = store_string(xid);
 
-		int idx = ffl_new_node(state->graph);
-		if (!ffl_dict_put(&state->node_dict, id, (void *) (uintptr_t) idx)) goto fail;
+		if (!xid) goto fail;
+		
+		state->cur_id = store_string(xid);
 	} else if (!strcmp(elem, "edge")) {
-		void *ptr;
+		void *psource, *ptarget;
+
+		memset(&state->cur_edge, 0, sizeof (FFL_Edge));
 
 		const char *xsource = get_attr(attr, "source");
-		if (!xsource || !ffl_dict_get(&state->node_dict, xsource, &ptr)) goto fail;
-		int source = (int) (uintptr_t) ptr;
-
 		const char *xtarget = get_attr(attr, "target");
-		if (!xtarget || !ffl_dict_get(&state->node_dict, xtarget, &ptr)) goto fail;
-		int target = (int) (uintptr_t) ptr;
 
-		int idx = ffl_new_edge(state->graph);
-		state->graph->edges[idx].source = source;
-		state->graph->edges[idx].target = target;
-	//} else if (!strcmp(elem, "data")) {
-		//get_attr(attr, "key");
+		if (!xsource || !ffl_dict_get(&state->node_dict, xsource, &psource)) goto fail;
+		if (!xtarget || !ffl_dict_get(&state->node_dict, xtarget, &ptarget)) goto fail;
+
+		state->cur_edge.source = (int) (uintptr_t) psource;
+		state->cur_edge.target = (int) (uintptr_t) ptarget;
+	}
+	return;
+fail:
+	BAIL(state);
+}
+
+static void
+process_end_tag(void *data, const XML_Char *elem)
+{
+	GML_State *state = data;
+	if (!strcmp(elem, "key")) {
+		if (!ffl_dict_put(&state->key_dict, state->cur_id, (void *) (uintptr_t) state->cur_attr)) goto fail;
+	} else if (!strcmp(elem, "node")) {
+		int idx = ffl_push_vertex(state->graph, state->cur_vert);
+		if (!ffl_dict_put(&state->node_dict, state->cur_id, (void *) (uintptr_t) idx)) goto fail;
+	} else if (!strcmp(elem, "edge")) {
+		ffl_push_edge(state->graph, state->cur_edge);
 	}
 	return;
 fail:
@@ -136,47 +152,6 @@ process_text(void *data, const XML_Char *str, int len)
 	}
 	memcpy(state->text + state->text_length, str, len);
 	state->text_length += len;
-}
-
-static void
-process_end_tag(void *data, const XML_Char *elem)
-{
-	GML_State *state = data;
-	if (!strcmp(elem, "key")) {
-		const char *xid = get_attr(attr, "id");
-		if (!xid) goto fail;
-		char *id = store_string(xid);
-
-		const char *xname = get_attr(attr, "attr.name");
-		const char *xfor  = get_attr(attr, "for");
-		const char *xtype = get_attr(attr, "attr.type");
-		if (!xname || !xfor || !xtype) goto fail;
-
-		if (!strcmp(xname, "weight") && !strcmp(xfor, "edge")) {
-			if (!ffl_dict_put(&state->key_dict, id, (void *) (uintptr_t) ATTR_EDGE_WEIGHT)) goto fail;
-		}
-	} else if (!strcmp(elem, "node")) {
-		const char *xid = get_attr(attr, "id");
-		if (!xid) goto fail;
-		char *id = store_string(xid);
-
-		int idx = ffl_new_node(state->graph);
-		if (!ffl_dict_put(&state->node_dict, id, (void *) (uintptr_t) idx)) goto fail;
-	} else if (!strcmp(elem, "edge")) {
-		void *ptr;
-
-		const char *xsource = get_attr(attr, "source");
-		if (!xsource || !ffl_dict_get(&state->node_dict, xsource, &ptr)) goto fail;
-		int source = (int) (uintptr_t) ptr;
-
-		const char *xtarget = get_attr(attr, "target");
-		if (!xtarget || !ffl_dict_get(&state->node_dict, xtarget, &ptr)) goto fail;
-		int target = (int) (uintptr_t) ptr;
-
-		int idx = ffl_new_edge(state->graph);
-		state->graph->edges[idx].source = source;
-		state->graph->edges[idx].target = target;
-	}
 }
 
 int
