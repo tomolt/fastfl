@@ -26,6 +26,10 @@ struct GML_State {
 	bool text_enable;
 	int  text_length;
 	char text[TEXT_SIZE];
+
+	int        cur_attr;
+	FFL_Vertex cur_vert;
+	FFL_Edge   cur_edge;
 	
 	FFL_Dict key_dict;
 	FFL_Dict node_dict;
@@ -92,6 +96,8 @@ process_start_tag(void *data, const XML_Char *elem, const XML_Char **attr)
 		}
 	//} else if (!strcmp(elem, "default")) {
 	} else if (!strcmp(elem, "node")) {
+		memset(&state->cur_vert, 0, sizeof FFL_Vertex);
+
 		const char *xid = get_attr(attr, "id");
 		if (!xid) goto fail;
 		char *id = store_string(xid);
@@ -136,9 +142,40 @@ static void
 process_end_tag(void *data, const XML_Char *elem)
 {
 	GML_State *state = data;
-	(void) state;
-	if (!strcmp(elem, "default")) {
-	} else if (!strcmp(elem, "data")) {
+	if (!strcmp(elem, "key")) {
+		const char *xid = get_attr(attr, "id");
+		if (!xid) goto fail;
+		char *id = store_string(xid);
+
+		const char *xname = get_attr(attr, "attr.name");
+		const char *xfor  = get_attr(attr, "for");
+		const char *xtype = get_attr(attr, "attr.type");
+		if (!xname || !xfor || !xtype) goto fail;
+
+		if (!strcmp(xname, "weight") && !strcmp(xfor, "edge")) {
+			if (!ffl_dict_put(&state->key_dict, id, (void *) (uintptr_t) ATTR_EDGE_WEIGHT)) goto fail;
+		}
+	} else if (!strcmp(elem, "node")) {
+		const char *xid = get_attr(attr, "id");
+		if (!xid) goto fail;
+		char *id = store_string(xid);
+
+		int idx = ffl_new_node(state->graph);
+		if (!ffl_dict_put(&state->node_dict, id, (void *) (uintptr_t) idx)) goto fail;
+	} else if (!strcmp(elem, "edge")) {
+		void *ptr;
+
+		const char *xsource = get_attr(attr, "source");
+		if (!xsource || !ffl_dict_get(&state->node_dict, xsource, &ptr)) goto fail;
+		int source = (int) (uintptr_t) ptr;
+
+		const char *xtarget = get_attr(attr, "target");
+		if (!xtarget || !ffl_dict_get(&state->node_dict, xtarget, &ptr)) goto fail;
+		int target = (int) (uintptr_t) ptr;
+
+		int idx = ffl_new_edge(state->graph);
+		state->graph->edges[idx].source = source;
+		state->graph->edges[idx].target = target;
 	}
 }
 
