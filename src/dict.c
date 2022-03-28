@@ -34,7 +34,7 @@ ffl_dict_free(FFL_Dict *dict)
 }
 
 static bool
-dict_insert(FFL_Dict *dict, const char *key, uint32_t hash, void *value)
+dict_insert(FFL_Dict *dict, const char *key, uint32_t hash, int value)
 {
 	for (uint32_t dib = 0;; dib++) {
 		uint32_t idx = (hash + dib) & (dict->cap - 1);
@@ -52,7 +52,7 @@ dict_insert(FFL_Dict *dict, const char *key, uint32_t hash, void *value)
 			SWAP(const char *, key,   slot->key);
 			SWAP(uint32_t,     hash,  slot->hash);
 			SWAP(int,          dib,   slot->dib);
-			SWAP(void *,       value, dict->values[idx]);
+			SWAP(int,          value, dict->values[idx]);
 		}
 
 		if (slot->hash == hash && !strcmp(slot->key, key)) {
@@ -62,7 +62,7 @@ dict_insert(FFL_Dict *dict, const char *key, uint32_t hash, void *value)
 }
 
 bool
-ffl_dict_put(FFL_Dict *dict, const char *key, void *value)
+ffl_dict_put(FFL_Dict *dict, const char *key, int value)
 {
 	if (3 * dict->num > 2 * dict->cap) {
 		FFL_Dict ndict;
@@ -81,7 +81,7 @@ ffl_dict_put(FFL_Dict *dict, const char *key, void *value)
 }
 
 bool
-ffl_dict_get(FFL_Dict *dict, const char *key, void **value)
+ffl_dict_get(FFL_Dict *dict, const char *key, int *value)
 {
 	uint32_t hash = ffl_hash_string(key);
 	for (uint32_t dib = 0;; dib++) {

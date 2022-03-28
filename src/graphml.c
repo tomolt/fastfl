@@ -107,18 +107,13 @@ process_start_tag(void *data, const XML_Char *elem, const XML_Char **attr)
 		
 		state->cur_id = store_string(xid);
 	} else if (!strcmp(elem, "edge")) {
-		void *psource, *ptarget;
-
 		memset(&state->cur_edge, 0, sizeof (FFL_Edge));
 
 		const char *xsource = get_attr(attr, "source");
 		const char *xtarget = get_attr(attr, "target");
 
-		if (!xsource || !ffl_dict_get(&state->node_dict, xsource, &psource)) goto fail;
-		if (!xtarget || !ffl_dict_get(&state->node_dict, xtarget, &ptarget)) goto fail;
-
-		state->cur_edge.source = (int) (uintptr_t) psource;
-		state->cur_edge.target = (int) (uintptr_t) ptarget;
+		if (!xsource || !ffl_dict_get(&state->node_dict, xsource, &state->cur_edge.source)) goto fail;
+		if (!xtarget || !ffl_dict_get(&state->node_dict, xtarget, &state->cur_edge.target)) goto fail;
 	}
 	return;
 fail:
@@ -130,10 +125,10 @@ process_end_tag(void *data, const XML_Char *elem)
 {
 	GML_State *state = data;
 	if (!strcmp(elem, "key")) {
-		if (!ffl_dict_put(&state->key_dict, state->cur_id, (void *) (uintptr_t) state->cur_attr)) goto fail;
+		if (!ffl_dict_put(&state->key_dict, state->cur_id, state->cur_attr)) goto fail;
 	} else if (!strcmp(elem, "node")) {
 		int idx = ffl_push_vertex(state->graph, state->cur_vert);
-		if (!ffl_dict_put(&state->node_dict, state->cur_id, (void *) (uintptr_t) idx)) goto fail;
+		if (!ffl_dict_put(&state->node_dict, state->cur_id, idx)) goto fail;
 	} else if (!strcmp(elem, "edge")) {
 		ffl_push_edge(state->graph, state->cur_edge);
 	}
@@ -149,6 +144,7 @@ process_text(void *data, const XML_Char *str, int len)
 	if (!state->text_enable) return;
 	if (state->text_length + len > TEXT_SIZE) {
 		BAIL(state);
+		return;
 	}
 	memcpy(state->text + state->text_length, str, len);
 	state->text_length += len;
