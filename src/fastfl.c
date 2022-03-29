@@ -6,7 +6,7 @@
 #include "graph.h"
 #include "arg.h"
 
-extern int graphml_read(const char *filename, FFL_Graph *graph);
+extern FFL_Graph *ffl_import(FILE *file, const char *flavor);
 
 char *argv0;
 
@@ -38,14 +38,22 @@ main(int argc, char **argv)
 		usage();
 	}
 
-	FFL_Graph graph;
-	if (graphml_read(*argv, &graph) < 0) {
-		fprintf(stderr, "Error reading GraphML file.\n");
+	FILE *file = fopen(argv[1], "r");
+	if (!file) {
+		fprintf(stderr, "Error reading graph file.\n");
 		exit(1);
 	}
 
-	dump_graph(&graph);
+	FFL_Graph *graph = ffl_import(file, "#\tE");
+	fclose(file);
+	if (!graph) {
+		fprintf(stderr, "Error reading graph file.\n");
+		exit(1);
+	}
 
+	dump_graph(graph);
+
+	ffl_free_graph(graph);
 	return 0;
 }
 

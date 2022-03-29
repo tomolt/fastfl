@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "graph.h"
+
 #define LINE_MAX 1024
 
 #define FREM 0
@@ -8,44 +10,40 @@
 #define FENC 2
 
 static int
-getcell(int idx)
+get_cell(int idx)
 {
 }
 
 static int
-eline(char *line)
+edge_line(FFL_Graph *graph, char *line)
 {
-	int source = getcell(0);
-	int target = getcell(1);
+	int source = get_cell(0);
+	int target = get_cell(1);
+
+	int eid = ffl_add_edge(graph);
+
 	return 0;
 }
 
-static int
-iline(char *line)
-{
-	int vert = getcell(0);
-	int edge = getcell(1);
-	return 0;
-}
-
-//TODO aline()
-//TODO mline()
+// TODO incidence_line()
+// TODO adjacency_line()
+// TODO matrix_line()
 
 FFL_Graph *
 ffl_import(FILE *file, const char *flavor)
 {
-	FFL_Graph *graph = ffl_new_graph();
+	FFL_Graph *graph = ffl_make_graph();
 
-	linefunc;
+	int (*linefunc)(FFL_Graph *, char *);
 	switch (flavor[FENC]) {
-	case 'E': linefunc = eline; break;
-	case 'I': linefunc = iline; break;
+	case 'E': linefunc = edge_line; break;
+	default: goto fail;
 	}
 
 	char line[LINE_MAX];
 	while (fgets(line, LINE_MAX, file)) {
 		if (flavor[FREM] != '0' && line[0] == flavor[FREM]) continue;
-		linefunc();		
+		if (!linefunc(graph, line)) goto fail;
 	}
 	if (ferror(file)) goto fail;
 
