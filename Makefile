@@ -7,7 +7,7 @@ LDFLAGS=-g
 ARFLAGS=rcs
 LIBS=-lm -lpthread
 
-LIB_SRCS=src/layout.c
+LIB_SRCS=src/graph.c src/layout.c
 LIB_OBJS=$(patsubst src/%.c,build/%.o,$(LIB_SRCS))
 LIB_DEPS=$(patsubst src/%.c,build/%.d,$(LIB_SRCS))
 
