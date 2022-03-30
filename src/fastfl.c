@@ -37,7 +37,7 @@ main(int argc, char **argv)
 		usage();
 	}
 
-	FILE *file = fopen(argv[1], "r");
+	FILE *file = fopen(*argv, "r");
 	if (!file) {
 		fprintf(stderr, "Error reading graph file.\n");
 		exit(1);

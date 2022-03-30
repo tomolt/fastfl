@@ -66,7 +66,7 @@ ffl_import(FILE *file, const FFL_FileFlavor *flavor)
 	char line[LINE_MAX];
 	while (fgets(line, LINE_MAX, file)) {
 		if (flavor->comments_allowed && line[0] == flavor->comment_marker) continue;
-		if (!flavor->format_reader(graph, line, flavor)) goto fail;
+		if (flavor->format_reader(graph, line, flavor) < 0) goto fail;
 	}
 	if (ferror(file)) goto fail;
 
