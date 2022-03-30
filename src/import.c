@@ -30,7 +30,31 @@ ffl_edge_format(FFL_Graph *graph, char *line, const FFL_FileFlavor *flavor)
 	return 0;
 }
 
-// TODO ffl_incidence_format()
+int
+ffl_incidence_format(FFL_Graph *graph, char *line, const FFL_FileFlavor *flavor)
+{
+	errno = 0;
+	int vert = (int) strtol(line, &line, 10);
+	if (errno) return -1;
+	if (*line++ != flavor->delimiter) return -1;
+	int edge = (int) strtol(line, &line, 10);
+	if (errno) return -1;
+
+	if (vert >= graph->nverts) ffl_grow_vertices(graph, vert + 1);
+	if (edge >= graph->nedges) ffl_grow_edges(graph, edge + 1);
+
+	FFL_Edge *ep = &graph->edges[edge];
+	if (ep->source < 0) {
+		ep->source = vert;
+	} else if (ep->target < 0) {
+		ep->target = vert;
+	} else {
+		return -1;
+	}
+
+	return 0;
+}
+
 // TODO ffl_adjacency_format()
 // TODO ffl_matrix_format()
 

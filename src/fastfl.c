@@ -43,9 +43,9 @@ main(int argc, char **argv)
 		exit(1);
 	}
 
-	/* edge-organzied .tsv */
+	/* incidence table in .tsv format */
 	FFL_FileFlavor flavor;
-	flavor.format_reader = ffl_edge_format;
+	flavor.format_reader = ffl_incidence_format;
 	flavor.delimiter = '\t';
 	flavor.comment_marker = '#';
 	flavor.comments_allowed = true;

@@ -11,5 +11,7 @@ struct FFL_FileFlavor {
 };
 
 int ffl_edge_format(FFL_Graph *graph, char *line, const FFL_FileFlavor *flavor);
+int ffl_incidence_format(FFL_Graph *graph, char *line, const FFL_FileFlavor *flavor);
+
 FFL_Graph *ffl_import(FILE *file, const FFL_FileFlavor *flavor);
 
