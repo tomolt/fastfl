@@ -27,7 +27,7 @@ clean:
 	rm -f build/libfastfl.a
 	rm -f build/fastfl
 
-build/fastfl: build/libfastfl.a $(APP_OBJS)
+build/fastfl: $(APP_OBJS) build/libfastfl.a
 	$(LD) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 build/libfastfl.a: $(LIB_OBJS)

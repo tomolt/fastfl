@@ -4,9 +4,8 @@
 #include <fastfl.h>
 
 #include "graph.h"
+#include "import.h"
 #include "arg.h"
-
-extern FFL_Graph *ffl_import(FILE *file, const char *flavor);
 
 char *argv0;
 
@@ -44,7 +43,14 @@ main(int argc, char **argv)
 		exit(1);
 	}
 
-	FFL_Graph *graph = ffl_import(file, "#\tE");
+	/* edge-organzied .tsv */
+	FFL_FileFlavor flavor;
+	flavor.format_reader = ffl_edge_format;
+	flavor.delimiter = '\t';
+	flavor.comment_marker = '#';
+	flavor.comments_allowed = true;
+
+	FFL_Graph *graph = ffl_import(file, &flavor);
 	fclose(file);
 	if (!graph) {
 		fprintf(stderr, "Error reading graph file.\n");

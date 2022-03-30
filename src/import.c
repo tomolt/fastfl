@@ -1,49 +1,48 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #include "graph.h"
+#include "import.h"
 
 #define LINE_MAX 1024
 
-#define FREM 0
-#define FDEL 1
-#define FENC 2
-
-static int
-get_cell(int idx)
+int
+ffl_edge_format(FFL_Graph *graph, char *line, const FFL_FileFlavor *flavor)
 {
-}
+	errno = 0;
+	int source = (int) strtol(line, &line, 10);
+	if (errno) return -1;
+	if (*line++ != flavor->delimiter) return -1;
+	int target = (int) strtol(line, &line, 10);
+	if (errno) return -1;
 
-static int
-edge_line(FFL_Graph *graph, char *line)
-{
-	int source = get_cell(0);
-	int target = get_cell(1);
+	if (source >= graph->nverts) ffl_grow_vertices(graph, source + 1);
+	if (target >= graph->nverts) ffl_grow_vertices(graph, target + 1);
 
 	int eid = ffl_add_edge(graph);
+
+	graph->edges[eid].source  = source;
+	graph->edges[eid].target  = target;
+	graph->edges[eid].dlength = 1.0f;
 
 	return 0;
 }
 
-// TODO incidence_line()
-// TODO adjacency_line()
-// TODO matrix_line()
+// TODO ffl_incidence_format()
+// TODO ffl_adjacency_format()
+// TODO ffl_matrix_format()
 
 FFL_Graph *
-ffl_import(FILE *file, const char *flavor)
+ffl_import(FILE *file, const FFL_FileFlavor *flavor)
 {
 	FFL_Graph *graph = ffl_make_graph();
 
-	int (*linefunc)(FFL_Graph *, char *);
-	switch (flavor[FENC]) {
-	case 'E': linefunc = edge_line; break;
-	default: goto fail;
-	}
-
 	char line[LINE_MAX];
 	while (fgets(line, LINE_MAX, file)) {
-		if (flavor[FREM] != '0' && line[0] == flavor[FREM]) continue;
-		if (!linefunc(graph, line)) goto fail;
+		if (flavor->comments_allowed && line[0] == flavor->comment_marker) continue;
+		if (!flavor->format_reader(graph, line, flavor)) goto fail;
 	}
 	if (ferror(file)) goto fail;
 

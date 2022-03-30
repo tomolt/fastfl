@@ -26,6 +26,7 @@ ffl_free_graph(FFL_Graph *graph)
 void
 ffl_grow_vertices(FFL_Graph *graph, int nverts)
 {
+	graph->nverts = nverts;
 	if (nverts <= graph->cverts) return;
 	while (nverts > graph->cverts) graph->cverts *= 2;
 	graph->verts = realloc(graph->verts, graph->cverts * sizeof *graph->verts);
@@ -34,6 +35,7 @@ ffl_grow_vertices(FFL_Graph *graph, int nverts)
 void
 ffl_grow_edges(FFL_Graph *graph, int nedges)
 {
+	graph->nedges = nedges;
 	if (nedges <= graph->cedges) return;
 	while (nedges > graph->cedges) graph->cedges *= 2;
 	graph->edges = realloc(graph->edges, graph->cedges * sizeof *graph->edges);
