@@ -49,27 +49,3 @@ ffl_grow_edges(FFL_Graph *graph, int nedges)
 	graph->nedges = nedges;
 }
 
-int
-ffl_add_vertex(FFL_Graph *graph)
-{
-	int idx = graph->nverts;
-	if (++graph->nverts > graph->cverts) {
-		graph->cverts *= 2;
-		graph->verts = realloc(graph->verts, graph->cverts * sizeof *graph->verts);
-	}
-	graph->verts[idx] = (FFL_Vertex) { 0.0f, 0.0f, 0.0f, 0.0f };
-	return idx;
-}
-
-int
-ffl_add_edge(FFL_Graph *graph)
-{
-	int idx = graph->nedges;
-	if (++graph->nedges > graph->cedges) {
-		graph->cedges *= 2;
-		graph->edges = realloc(graph->edges, graph->cedges * sizeof *graph->edges);
-	}
-	graph->edges[idx] = (FFL_Edge) { -1, -1, 100.0f };
-	return idx;
-}
-

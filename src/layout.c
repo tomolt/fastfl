@@ -38,13 +38,10 @@ ffl_spring_forces(FFL_Graph *graph, float strength)
 		float dy = target->y - source->y;
 		float dlen = sqrtf(dx * dx + dy * dy);
 		if (dlen == 0.0f) continue;
-		printf("dlen = %f\n", dlen);
 		dx /= dlen;
 		dy /= dlen;
 
-		//float force = strength * log2f(dlen / edge->dlength) * dlen * dlen;
 		float force = strength * (dlen - edge->dlength);
-		printf("force = %f\n", force);
 
 		source->forcex += dx * force;
 		source->forcey += dy * force;
@@ -103,7 +100,6 @@ ffl_compute_layout(FFL_Graph *graph, const FFL_Settings *settings)
 	int rounds = TOTAL_ROUNDS;
 	while (rounds--) {
 		float temperature = 0.1f + 0.9f * (float) rounds / TOTAL_ROUNDS;
-		printf("temperature = %f\n", temperature);
 		ffl_spring_forces(graph, temperature * settings->spring_strength);
 		ffl_repulsion_forces(graph, temperature * settings->repulsion_strength);
 		ffl_apply_forces(graph);

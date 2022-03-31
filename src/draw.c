@@ -3,11 +3,7 @@
 #include "graph.h"
 #include "draw.h"
 
-static void
-set_pixel(FFL_Image *image, int x, int y)
-{
-	image->pixels[image->width * y + x] = 0xFFu;
-}
+#define SET_PIXEL(image,x,y,v) (image)->pixels[(image)->width * (y) + (x)] = (v)
 
 static void
 draw_line(FFL_Image *image, int x0, int y0, int x1, int y1)
@@ -17,7 +13,7 @@ draw_line(FFL_Image *image, int x0, int y0, int x1, int y1)
     int err = dx + dy; /* error value e_xy */
     
     for (;;) {
-        set_pixel(image, x0, y0);
+        SET_PIXEL(image, x0, y0, 0x7Fu);
         if (x0 == x1 && y0 == y1) break;
         int e2 = 2 * err;
         if (e2 > dy) { err += dy; x0 += sx; } /* e_xy+e_x > 0 */
@@ -32,7 +28,7 @@ draw_rhombus(FFL_Image *image, int x, int y, int radius)
 		for (int ox = -radius; ox <= radius; ox++) {
 			int d = abs(ox) + abs(oy);
 			if (d <= radius) {
-				set_pixel(image, x + ox, y + oy);
+				SET_PIXEL(image, x + ox, y + oy, 0xFFu);
 			}
 		}
 	}

@@ -28,6 +28,4 @@ FFL_Graph *ffl_make_graph(void);
 void ffl_free_graph(FFL_Graph *graph);
 void ffl_grow_vertices(FFL_Graph *graph, int nverts);
 void ffl_grow_edges(FFL_Graph *graph, int nedges);
-int  ffl_add_vertex(FFL_Graph *graph);
-int  ffl_add_edge  (FFL_Graph *graph);
 

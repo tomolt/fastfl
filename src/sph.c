@@ -1,7 +1,7 @@
 
 
 typedef struct FFL_SpaceNode FFL_SpaceNode;
-typedef struct FFL_SPH;
+typedef struct FFL_SPH FFL_SPH;
 
 struct FFL_SpaceNode {
 	float min_x;
@@ -23,12 +23,12 @@ struct FFL_SPH {
 };
 
 void
-ffl_treeify()
+ffl_treeify(FFL_SPH *sph)
 {
 }
 
 void
-ffl_linearize()
+ffl_linearize(FFL_SPH *sph)
 {
 }
 

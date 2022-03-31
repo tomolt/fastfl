@@ -21,10 +21,11 @@ ffl_edge_format(FFL_Graph *graph, char *line, const FFL_FileFlavor *flavor)
 	if (source >= graph->nverts) ffl_grow_vertices(graph, source + 1);
 	if (target >= graph->nverts) ffl_grow_vertices(graph, target + 1);
 
-	int eid = ffl_add_edge(graph);
+	int eid = graph->nedges;
+	ffl_grow_edges(graph, graph->nedges + 1);
 
-	graph->edges[eid].source  = source;
-	graph->edges[eid].target  = target;
+	graph->edges[eid].source = source;
+	graph->edges[eid].target = target;
 
 	return 0;
 }
