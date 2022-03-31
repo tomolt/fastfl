@@ -32,7 +32,7 @@ ffl_grow_vertices(FFL_Graph *graph, int nverts)
 		graph->verts = reallocarray(graph->verts, graph->cverts, sizeof *graph->verts);
 	}
 	for (int v = graph->nverts; v < nverts; v++) {
-		graph->verts[v] = (FFL_Vertex) { 0.0f, 0.0f, 0.0f, 0.0f };
+		graph->verts[v] = (FFL_Vertex) { 0.0f, 0.0f, 0.0f, 0.0f, -1 };
 	}
 	graph->nverts = nverts;
 }
