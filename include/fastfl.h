@@ -9,7 +9,7 @@ struct FFL_Settings {
 	float repulsion_strength;
 };
 
-void ffl_compute(FFL_Graph *graph, const FFL_Settings *settings);
+void ffl_compute_layout(FFL_Graph *graph, const FFL_Settings *settings);
 
 #endif /* FASTFL_H */
 

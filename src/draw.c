@@ -39,18 +39,27 @@ draw_rhombus(FFL_Image *image, int x, int y, int radius)
 }
 
 void
-ffl_draw_graph(const FFL_Graph *graph, FFL_Image *image)
+ffl_draw_graph(const FFL_Graph *graph, float offsetx, float offsety, FFL_Image *image)
 {
 	for (int e = 0; e < graph->nedges; e++) {
 		const FFL_Edge   *edge   = &graph->edges[e];
 		const FFL_Vertex *source = &graph->verts[edge->source];
 		const FFL_Vertex *target = &graph->verts[edge->target];
-		draw_line(image, (int) source->x, (int) source->y, (int) target->x, (int) target->y);
+		draw_line(image,
+			(int) (source->x + offsetx), (int) (source->y + offsety),
+			(int) (target->x + offsetx), (int) (target->y + offsety));
 	}
 
 	for (int v = 0; v < graph->nverts; v++) {
 		const FFL_Vertex *vert = &graph->verts[v];
-		draw_rhombus(image, (int) vert->x, (int) vert->y, 5);
+		draw_rhombus(image, (int) (vert->x + offsetx), (int) (vert->y + offsety), 5);
 	}
+}
+
+void
+ffl_write_pgm(const FFL_Image *image, FILE *file)
+{
+	fprintf(file, "P5\n%d %d\n255\n", image->width, image->height);
+	fwrite(image->pixels, image->width, image->height, file);
 }
 

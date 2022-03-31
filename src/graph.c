@@ -44,7 +44,7 @@ ffl_grow_edges(FFL_Graph *graph, int nedges)
 		graph->edges = realloc(graph->edges, graph->cedges * sizeof *graph->edges);
 	}
 	for (int e = graph->nedges; e < nedges; e++) {
-		graph->edges[e] = (FFL_Edge) { -1, -1, 0.0f };
+		graph->edges[e] = (FFL_Edge) { -1, -1, 10.0f };
 	}
 	graph->nedges = nedges;
 }
@@ -69,7 +69,7 @@ ffl_add_edge(FFL_Graph *graph)
 		graph->cedges *= 2;
 		graph->edges = realloc(graph->edges, graph->cedges * sizeof *graph->edges);
 	}
-	graph->edges[idx] = (FFL_Edge) { -1, -1, 0.0f };
+	graph->edges[idx] = (FFL_Edge) { -1, -1, 10.0f };
 	return idx;
 }
 
