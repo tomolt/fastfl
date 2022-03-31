@@ -11,7 +11,7 @@ LIB_SRCS=src/graph.c src/layout.c
 LIB_OBJS=$(patsubst src/%.c,build/%.o,$(LIB_SRCS))
 LIB_DEPS=$(patsubst src/%.c,build/%.d,$(LIB_SRCS))
 
-APP_SRCS=src/fastfl.c src/import.c src/dict.c
+APP_SRCS=src/fastfl.c src/import.c src/dict.c src/draw.c
 APP_OBJS=$(patsubst src/%.c,build/%.o,$(APP_SRCS))
 APP_DEPS=$(patsubst src/%.c,build/%.d,$(APP_SRCS))
 
