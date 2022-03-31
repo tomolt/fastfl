@@ -33,8 +33,11 @@ build/fastfl: $(APP_OBJS) build/libfastfl.a
 build/libfastfl.a: $(LIB_OBJS)
 	$(AR) $(ARFLAGS) $@ $^
 
-build/%.o: src/%.c
+build/%.o: src/%.c | build
 	$(CC) $(CFLAGS) -c $< -o $@ -MMD -MP
+
+build:
+	mkdir -p $@
 
 -include $(LIB_DEPS) $(APP_DEPS)
 
