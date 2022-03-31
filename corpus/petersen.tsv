@@ -1,0 +1,18 @@
+# outer ring
+0	1
+1	2
+2	3
+3	4
+4	0
+# inner star
+5	7
+6	8
+7	9
+8	5
+9	6
+# connecting inner & outer
+0	5
+1	6
+2	7
+3	8
+4	9

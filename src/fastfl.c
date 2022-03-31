@@ -47,7 +47,7 @@ main(int argc, char **argv)
 
 	/* incidence table in .tsv format */
 	FFL_FileFlavor flavor;
-	flavor.format_reader = ffl_incidence_format;
+	flavor.format_reader = ffl_edge_format;
 	flavor.delimiter = '\t';
 	flavor.comment_marker = '#';
 	flavor.comments_allowed = true;
@@ -74,7 +74,6 @@ main(int argc, char **argv)
 		if (vert->x > max_x) max_x = vert->x;
 		if (vert->y > max_y) max_y = vert->y;
 	}
-
 	printf("Graph bounding box: (%f, %f) - (%f, %f)\n", min_x, min_y, max_x, max_y);
 
 	FFL_Image image;
