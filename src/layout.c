@@ -102,8 +102,10 @@ ffl_compute_layout(FFL_Graph *graph, const FFL_Settings *settings)
 
 	int rounds = TOTAL_ROUNDS;
 	while (rounds--) {
-		ffl_spring_forces(graph, settings->spring_strength);
-		ffl_repulsion_forces(graph, settings->repulsion_strength);
+		float temperature = 0.1f + 0.9f * (float) rounds / TOTAL_ROUNDS;
+		printf("temperature = %f\n", temperature);
+		ffl_spring_forces(graph, temperature * settings->spring_strength);
+		ffl_repulsion_forces(graph, temperature * settings->repulsion_strength);
 		ffl_apply_forces(graph);
 	}
 }
