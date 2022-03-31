@@ -4,7 +4,6 @@
 #include <math.h>
 #include <stdio.h>
 
-#include "realloc.h"
 #include "graph.h"
 
 #define FFL_PI 3.14159265358979323846
