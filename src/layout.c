@@ -2,6 +2,7 @@
 
 #include <stdbool.h>
 #include <math.h>
+#include <stdio.h>
 
 #include "realloc.h"
 #include "graph.h"
@@ -11,7 +12,7 @@
 static void
 ffl_initial_layout(FFL_Graph *graph)
 {
-	float radius = (float) graph->nverts / 2.0f;
+	float radius = 10.0f * (float) graph->nverts / 2.0f;
 
 	for (int v = 0; v < graph->nverts; v++) {
 		FFL_Vertex *vert = &graph->verts[v];
@@ -37,10 +38,13 @@ ffl_spring_forces(FFL_Graph *graph, float strength)
 		float dy = target->y - source->y;
 		float dlen = sqrtf(dx * dx + dy * dy);
 		if (dlen == 0.0f) continue;
+		printf("dlen = %f\n", dlen);
 		dx /= dlen;
 		dy /= dlen;
 
-		float force = strength * logf(dlen / edge->dlength) * dlen * dlen;
+		//float force = strength * log2f(dlen / edge->dlength) * dlen * dlen;
+		float force = strength * (dlen - edge->dlength);
+		printf("force = %f\n", force);
 
 		source->forcex += dx * force;
 		source->forcey += dy * force;

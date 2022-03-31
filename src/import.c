@@ -25,7 +25,6 @@ ffl_edge_format(FFL_Graph *graph, char *line, const FFL_FileFlavor *flavor)
 
 	graph->edges[eid].source  = source;
 	graph->edges[eid].target  = target;
-	graph->edges[eid].dlength = 1.0f;
 
 	return 0;
 }
