@@ -7,7 +7,7 @@ struct FFL_Vertex {
 	float y;
 	float forcex;
 	float forcey;
-	int   next;
+	int   serial;
 };
 
 struct FFL_Edge {
