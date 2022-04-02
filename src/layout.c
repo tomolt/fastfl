@@ -40,7 +40,8 @@ ffl_spring_forces(FFL_Graph *graph, float strength)
 		dx /= dlen;
 		dy /= dlen;
 
-		float force = strength * (dlen - edge->dlength);
+		float force = dlen - edge->dlength;
+		force *= 0.5f * strength;
 
 		source->forcex += dx * force;
 		source->forcey += dy * force;
@@ -92,7 +93,7 @@ ffl_apply_forces(FFL_Graph *graph)
 void
 ffl_compute_layout(FFL_Graph *graph, const FFL_Settings *settings)
 {
-	const int TOTAL_ROUNDS = 50;
+	const int TOTAL_ROUNDS = 200;
 
 	ffl_initial_layout(graph);
 
