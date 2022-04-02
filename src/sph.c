@@ -1,60 +1,56 @@
-#include "sph.h"
+#include <stdlib.h>
 
-int
-partition(int low, int high)
+#include "graph.h"
+
+static int
+partition(FFL_Graph *graph, int low, int high)
 {
 	for (;;) {
-		while (low < high && COND(verts[low])) low++;
-		while (low < high && !COND(verts[high-1])) high--;
+		while (low < high && COND(graph->verts[low])) low++;
+		while (low < high && !COND(graph->verts[high-1])) high--;
 		if (!(low < high)) break;
-		FFL_Vertex temp = verts[low];
-		verts[low]      = verts[high-1];
-		verts[high-1]   = temp;
+		FFL_Vertex temp      = graph->verts[low];
+		graph->verts[low]    = graph->verts[high-1];
+		graph->verts[high-1] = temp;
 		low++, high--;
 	}
 	return low;
 }
 
 static bool
-split_heuristic(int low, int high)
+split_heuristic(FFL_Graph *graph, int low, int high)
 {
+	(void) graph;
 	if (high - low <= 8) return true;
 	return false;
 }
 
-static FFL_SpaceNode *
-build_node(int low, int high)
+static FFL_Clump *
+build_clump(FFL_Graph *graph, int low, int high)
 {
-	SPH_SpaceNode *node = calloc(1, sizeof *node);
-	node->mass = high - low;
-	if (split_heuristic(low, high)) {
-		node->is_leaf = true;
-		node->start   = low;
-		node->end     = high;
+	FFL_Clump *clump = calloc(1, sizeof *clump);
+	clump->mass = high - low;
+	if (split_heuristic(graph, low, high)) {
+		clump->is_leaf = true;
+		clump->low     = low;
+		clump->high    = high;
 		for (int i = low; i < high; i++) {
-			node->sum_x += verts[i].x;
-			node->sum_y += verts[i].y;
+			clump->sum_x += graph->verts[i].x;
+			clump->sum_y += graph->verts[i].y;
 		}
 	} else {
-		int border = partition(low, high);
-		node->nut = build_node(low, border);
-		node->geb = build_node(border, high);
-		node->sum_x = node->nut->sum_x + node->geb->sum_x;
-		node->sum_y = node->nut->sum_y + node->geb->sum_y;
+		int border = partition(graph, low, high);
+		clump->nut = build_clump(graph, low, border);
+		clump->geb = build_clump(graph, border, high);
+		clump->sum_x = clump->nut->sum_x + clump->geb->sum_x;
+		clump->sum_y = clump->nut->sum_y + clump->geb->sum_y;
 	}
-	return node;
+	return clump;
 }
 
 void
-ffl_treeify(FFL_SPH *sph)
+ffl_treeify(FFL_Graph *graph)
 {
-	(void) sph;
-	sph->root = build_node(0, nverts);
-}
-
-void
-ffl_linearize(FFL_SPH *sph)
-{
-	(void) sph;
+	graph->root_clump = build_clump(graph, 0, graph->nverts);
 }
 
