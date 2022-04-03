@@ -1,9 +1,10 @@
 #include <stdlib.h>
+#include <math.h>
 
 #include "graph.h"
 #include "draw.h"
 
-#define SET_PIXEL(image,x,y,v) (image)->pixels[(image)->width * (y) + (x)] = (v)
+#define SET_PIXEL(image,x,y,v) (image)->pixels[(image)->width * ((y) + (image)->offset_y) + ((x) + (image)->offset_x)] = (v)
 
 static void
 draw_line(FFL_Image *image, int x0, int y0, int x1, int y1)
@@ -35,21 +36,51 @@ draw_rhombus(FFL_Image *image, int x, int y, int radius)
 }
 
 void
-ffl_draw_graph(const FFL_Graph *graph, float offsetx, float offsety, FFL_Image *image)
+ffl_draw_graph(const FFL_Graph *graph, FFL_Image *image)
 {
 	for (int e = 0; e < graph->nedges; e++) {
 		const FFL_Edge   *edge   = &graph->edges[e];
 		const FFL_Vertex *source = &graph->verts[edge->source];
 		const FFL_Vertex *target = &graph->verts[edge->target];
 		draw_line(image,
-			(int) (source->x + offsetx), (int) (source->y + offsety),
-			(int) (target->x + offsetx), (int) (target->y + offsety));
+			(int) source->x, (int) source->y,
+			(int) target->x, (int) target->y);
 	}
 
 	for (int v = 0; v < graph->nverts; v++) {
 		const FFL_Vertex *vert = &graph->verts[v];
-		draw_rhombus(image, (int) (vert->x + offsetx), (int) (vert->y + offsety), 5);
+		draw_rhombus(image, (int) vert->x, (int) vert->y, 5);
 	}
+}
+
+static int
+draw_clump(const FFL_Graph *graph, const FFL_Clump *clump, FFL_Image *image)
+{
+	float x = clump->sum_x / clump->mass;
+	float y = clump->sum_y / clump->mass;
+	int r;
+	if (clump->is_leaf) {
+		for (int v = clump->low; v < clump->high; v++) {
+			const FFL_Vertex *vert = &graph->verts[v];
+			draw_line(image, x, y, vert->x, vert->y);
+			draw_rhombus(image, vert->x, vert->y, 2);
+		}
+		r = 3;
+	} else {
+		draw_line(image, x, y, clump->nut->sum_x / clump->nut->mass, clump->nut->sum_y / clump->nut->mass);
+		draw_line(image, x, y, clump->geb->sum_x / clump->geb->mass, clump->geb->sum_y / clump->geb->mass);
+		int r1 = draw_clump(graph, clump->nut, image);
+		int r2 = draw_clump(graph, clump->geb, image);
+		r = (r1 > r2 ? r1 : r2) + 1;
+	}
+	draw_rhombus(image, x, y, r);
+	return r;
+}
+
+void
+ffl_draw_clumping(const FFL_Graph *graph, FFL_Image *image)
+{
+	draw_clump(graph, graph->root_clump, image);
 }
 
 void

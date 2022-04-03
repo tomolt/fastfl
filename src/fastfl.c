@@ -77,10 +77,18 @@ main(int argc, char **argv)
 	printf("Graph bounding box: (%f, %f) - (%f, %f)\n", min_x, min_y, max_x, max_y);
 
 	FFL_Image image;
-	image.width  = (int) (max_x - min_x) + 100;
-	image.height = (int) (max_y - min_y) + 100;
-	image.pixels = calloc(image.width, image.height);
-	ffl_draw_graph(graph, -min_x + 50.0f, -min_y + 50.0f, &image);
+	image.width    = (int) (max_x - min_x) + 100;
+	image.height   = (int) (max_y - min_y) + 100;
+	image.offset_x = (int) -min_x + 50;
+	image.offset_y = (int) -min_y + 50;
+	image.pixels   = calloc(image.width, image.height);
+
+#if 0
+	ffl_draw_graph(graph, &image);
+#else
+	ffl_treeify(graph);
+	ffl_draw_clumping(graph, &image);
+#endif
 
 	FILE *outfile = fopen("out.pgm", "wb");
 	ffl_write_pgm(&image, outfile);

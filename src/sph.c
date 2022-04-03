@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <math.h>
+#include <assert.h>
 
 #include "graph.h"
 
@@ -38,7 +39,7 @@ split_heuristic(const FFL_Graph *graph, int low, int high, struct condition *con
 	float max_x = -INFINITY, max_y = -INFINITY;
 
 	for (int i = 0; i < 6 || (min_x >= max_x && min_y >= max_y); i++) {
-		int v = rand() % graph->nverts;
+		int v = low + (rand() % (high - low));
 		const FFL_Vertex *vert = &graph->verts[v];
 		if (vert->x < min_x) min_x = vert->x;
 		if (vert->y < min_y) min_y = vert->y;
@@ -60,6 +61,7 @@ split_heuristic(const FFL_Graph *graph, int low, int high, struct condition *con
 static FFL_Clump *
 build_clump(FFL_Graph *graph, int low, int high)
 {
+	assert(low < high);
 	FFL_Clump *clump = calloc(1, sizeof *clump);
 	clump->mass = high - low;
 	struct condition cond;
