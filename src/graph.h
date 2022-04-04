@@ -22,8 +22,8 @@ struct FFL_Edge {
 struct FFL_Clump {
 	float force_x;
 	float force_y;
-	float sum_x;
-	float sum_y;
+	float com_x;
+	float com_y;
 	float variance;
 	int   mass;
 	bool  is_leaf;

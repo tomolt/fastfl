@@ -69,21 +69,37 @@ build_clump(FFL_Graph *graph, int low, int high)
 		int border = partition(graph, low, high, &cond);
 		clump->nut = build_clump(graph, low, border);
 		clump->geb = build_clump(graph, border, high);
-		clump->sum_x = clump->nut->sum_x + clump->geb->sum_x;
-		clump->sum_y = clump->nut->sum_y + clump->geb->sum_y;
 
-		//clump->variance = ;
+		clump->com_x  = clump->nut->com_x * clump->nut->mass;
+		clump->com_x += clump->geb->com_x * clump->geb->mass;
+		clump->com_x /= clump->mass;
+		
+		clump->com_y  = clump->nut->com_y * clump->nut->mass;
+		clump->com_y += clump->geb->com_y * clump->geb->mass;
+		clump->com_y /= clump->mass;
+		
+		float dx0 = clump->nut->com_x - clump->com_x;
+		float dy0 = clump->nut->com_y - clump->com_y;
+		float dx1 = clump->geb->com_x - clump->com_x;
+		float dy1 = clump->geb->com_y - clump->com_y;
+		clump->variance  = sqrtf(dx0 * dx0 + dy0 * dy0) * clump->nut->mass;
+		clump->variance += sqrtf(dx1 * dx1 + dy1 * dy1) * clump->geb->mass;
+		clump->variance /= clump->mass;
 	} else {
 		clump->is_leaf = true;
 		clump->low     = low;
 		clump->high    = high;
+
 		for (int i = low; i < high; i++) {
-			clump->sum_x += graph->verts[i].x;
-			clump->sum_y += graph->verts[i].y;
+			clump->com_x += graph->verts[i].x;
+			clump->com_y += graph->verts[i].y;
 		}
+		clump->com_x /= clump->mass;
+		clump->com_y /= clump->mass;
+		
 		for (int i = low; i < high; i++) {
-			float dx = graph->verts[i].x - clump->sum_x / clump->mass;
-			float dy = graph->verts[i].y - clump->sum_y / clump->mass;
+			float dx = graph->verts[i].x - clump->com_x;
+			float dy = graph->verts[i].y - clump->com_y;
 			clump->variance += sqrtf(dx * dx + dy * dy);
 		}
 		clump->variance /= clump->mass;

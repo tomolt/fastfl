@@ -19,8 +19,8 @@ repulsion_rec(FFL_Graph *graph, FFL_Clump *c0, FFL_Clump *c1)
 		return;
 	}
 
-	float dx = c1->sum_x / c1->mass - c0->sum_x / c0->mass;
-	float dy = c1->sum_y / c1->mass - c0->sum_y / c0->mass;
+	float dx = c1->com_x - c0->com_x;
+	float dy = c1->com_y - c0->com_y;
 	float dist_sq = dx * dx + dy * dy;
 
 	if (dist_sq > 0.0f && c0->variance * c1->variance / dist_sq <= graph->repulsion_accuracy) {
