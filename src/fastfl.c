@@ -63,6 +63,7 @@ main(int argc, char **argv)
 
 	graph->spring_strength    = 0.8f;
 	graph->repulsion_strength = 3.0f;
+	graph->repulsion_accuracy = 0.0f;
 	ffl_compute_layout(graph);
 
 	float min_x = INFINITY, min_y = INFINITY, max_x = -INFINITY, max_y = -INFINITY;

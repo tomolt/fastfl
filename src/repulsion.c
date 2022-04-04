@@ -1,6 +1,9 @@
+#include <assert.h>
+
 #include "graph.h"
 
 extern void ffl_repulsion_1onN(FFL_Graph *graph, int t, int low, int high);
+void ffl_repulsion_naive(FFL_Graph *graph);
 
 static void
 repulsion_rec(FFL_Graph *graph, FFL_Clump *c0, FFL_Clump *c1)
@@ -43,10 +46,13 @@ repulsion_rec(FFL_Graph *graph, FFL_Clump *c0, FFL_Clump *c1)
 		return;
 	}
 
-	if (c0->variance < c1->variance || c0->is_leaf) {
+	/* TODO this conditional works for now, but it's not intuitive at all. */
+	if (!c1->is_leaf && (c0->variance < c1->variance || c0->is_leaf)) {
+		assert(!c1->is_leaf);
 		repulsion_rec(graph, c0, c1->nut);
 		repulsion_rec(graph, c0, c1->geb);
 	} else {
+		assert(!c0->is_leaf);
 		repulsion_rec(graph, c0->nut, c1);
 		repulsion_rec(graph, c0->geb, c1);
 	}
@@ -55,6 +61,9 @@ repulsion_rec(FFL_Graph *graph, FFL_Clump *c0, FFL_Clump *c1)
 void
 ffl_repulsion_accelerated(FFL_Graph *graph)
 {
+	ffl_treeify(graph);
 	repulsion_rec(graph, graph->root_clump, graph->root_clump);
+	ffl_linearize(graph);
+	//ffl_repulsion_naive(graph);
 }
 

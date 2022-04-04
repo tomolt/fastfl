@@ -77,7 +77,7 @@ ffl_repulsion_1onN(FFL_Graph *graph, int t, int low, int high)
 	}
 }
 
-static void
+void
 ffl_repulsion_naive(FFL_Graph *graph)
 {
 	for (int t = 0; t < graph->nverts; t++) {
@@ -109,7 +109,7 @@ ffl_compute_layout(FFL_Graph *graph)
 	int rounds = TOTAL_ROUNDS;
 	while (rounds--) {
 		ffl_spring_forces(graph);
-		ffl_repulsion_naive(graph);
+		ffl_repulsion_accelerated(graph);
 		ffl_apply_forces(graph);
 	}
 }
