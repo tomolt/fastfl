@@ -45,7 +45,7 @@ ffl_grow_edges(FFL_Graph *graph, int nedges)
 		graph->edges = reallocarray(graph->edges, graph->cedges, sizeof *graph->edges);
 	}
 	for (int e = graph->nedges; e < nedges; e++) {
-		graph->edges[e] = (FFL_Edge) { -1, -1, 100.0f };
+		graph->edges[e] = (FFL_Edge) { -1, -1, 10.0f };
 	}
 	graph->nedges = nedges;
 }
