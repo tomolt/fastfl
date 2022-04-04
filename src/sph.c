@@ -71,6 +71,8 @@ build_clump(FFL_Graph *graph, int low, int high)
 		clump->geb = build_clump(graph, border, high);
 		clump->sum_x = clump->nut->sum_x + clump->geb->sum_x;
 		clump->sum_y = clump->nut->sum_y + clump->geb->sum_y;
+
+		//clump->variance = ;
 	} else {
 		clump->is_leaf = true;
 		clump->low     = low;
@@ -79,6 +81,12 @@ build_clump(FFL_Graph *graph, int low, int high)
 			clump->sum_x += graph->verts[i].x;
 			clump->sum_y += graph->verts[i].y;
 		}
+		for (int i = low; i < high; i++) {
+			float dx = graph->verts[i].x - clump->sum_x / clump->mass;
+			float dy = graph->verts[i].y - clump->sum_y / clump->mass;
+			clump->variance += sqrtf(dx * dx + dy * dy);
+		}
+		clump->variance /= clump->mass;
 	}
 	return clump;
 }
