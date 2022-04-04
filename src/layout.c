@@ -102,7 +102,7 @@ ffl_apply_forces(FFL_Graph *graph)
 void
 ffl_compute_layout(FFL_Graph *graph)
 {
-	const int TOTAL_ROUNDS = 200;
+	const int TOTAL_ROUNDS = 2000;
 
 	ffl_initial_layout(graph);
 
@@ -110,6 +110,7 @@ ffl_compute_layout(FFL_Graph *graph)
 	while (rounds--) {
 		ffl_spring_forces(graph);
 		ffl_repulsion_accelerated(graph);
+		//ffl_repulsion_naive(graph);
 		ffl_apply_forces(graph);
 	}
 }

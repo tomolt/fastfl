@@ -62,8 +62,8 @@ main(int argc, char **argv)
 	dump_graph(graph);
 
 	graph->spring_strength    = 0.8f;
-	graph->repulsion_strength = 3.0f;
-	graph->repulsion_accuracy = 0.0f;
+	graph->repulsion_strength = 5.0f;
+	graph->repulsion_accuracy = 0.005f;
 	ffl_compute_layout(graph);
 
 	float min_x = INFINITY, min_y = INFINITY, max_x = -INFINITY, max_y = -INFINITY;
@@ -83,7 +83,7 @@ main(int argc, char **argv)
 	image.offset_y = (int) -min_y + 50;
 	image.pixels   = calloc(image.width, image.height);
 
-#if 0
+#if 1
 	ffl_draw_graph(graph, &image);
 #else
 	ffl_treeify(graph);
