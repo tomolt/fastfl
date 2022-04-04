@@ -86,10 +86,16 @@ ffl_repulsion_naive(FFL_Graph *graph)
 }
 
 static void
-ffl_apply_forces(FFL_Graph *graph)
+ffl_apply_forces(FFL_Graph *graph, float temperature)
 {
 	for (int v = 0; v < graph->nverts; v++) {
 		FFL_Vertex *vert = &graph->verts[v];
+
+		float magnitude = sqrtf(vert->force_x * vert->force_x + vert->force_y * vert->force_y);
+		if (magnitude > temperature) {
+			vert->force_x *= temperature / magnitude;
+			vert->force_y *= temperature / magnitude;
+		}
 
 		vert->x += vert->force_x;
 		vert->y += vert->force_y;
@@ -107,11 +113,12 @@ ffl_compute_layout(FFL_Graph *graph)
 	ffl_initial_layout(graph);
 
 	int rounds = TOTAL_ROUNDS;
-	while (rounds--) {
+	while (rounds) {
 		ffl_spring_forces(graph);
 		ffl_repulsion_accelerated(graph);
 		//ffl_repulsion_naive(graph);
-		ffl_apply_forces(graph);
+		ffl_apply_forces(graph, 100.0f * ((float) rounds / TOTAL_ROUNDS));
+		rounds--;
 	}
 }
 
