@@ -56,9 +56,7 @@ ffl_repulsion_forces(FFL_Graph *graph, float strength)
 {
 	for (int t = 0; t < graph->nverts; t++) {
 		FFL_Vertex *target = &graph->verts[t];
-		for (int s = 0; s < graph->nverts; s++) {
-			if (t == s) continue;
-
+		for (int s = 0; s < t; s++) {
 			FFL_Vertex *source = &graph->verts[s];
 
 			float dx = target->x - source->x;
@@ -69,6 +67,9 @@ ffl_repulsion_forces(FFL_Graph *graph, float strength)
 			float force = strength / dist_sq;
 			dx *= force;
 			dy *= force;
+
+			source->forcex -= dx;
+			source->forcey -= dy;
 
 			target->forcex += dx;
 			target->forcey += dy;
