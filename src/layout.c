@@ -63,15 +63,15 @@ ffl_repulsion_forces(FFL_Graph *graph, float strength)
 
 			float dx = target->x - source->x;
 			float dy = target->y - source->y;
-			float dlen = sqrtf(dx * dx + dy * dy);
-			if (dlen == 0.0f) continue;
-			dx /= dlen;
-			dy /= dlen;
+			float dist_sq = dx * dx + dy * dy;
+			if (dist_sq == 0.0f) continue;
 
-			float force = strength / dlen;
+			float force = strength / dist_sq;
+			dx *= force;
+			dy *= force;
 
-			target->forcex += dx * force;
-			target->forcey += dy * force;
+			target->forcex += dx;
+			target->forcey += dy;
 		}
 	}
 }
