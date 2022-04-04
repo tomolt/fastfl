@@ -26,7 +26,7 @@ repulsion_rec(FFL_Graph *graph, FFL_Clump *c0, FFL_Clump *c1)
 	float dy = c1->com_y - c0->com_y;
 	float dist_sq = dx * dx + dy * dy;
 
-	if (dist_sq > 0.0f && c0->variance * c1->variance / dist_sq <= graph->repulsion_accuracy) {
+	if (c0->variance * c1->variance < graph->repulsion_accuracy * dist_sq) {
 		float force = graph->repulsion_strength / dist_sq;
 		dx *= force;
 		dy *= force;

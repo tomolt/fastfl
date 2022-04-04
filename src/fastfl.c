@@ -27,6 +27,30 @@ dump_graph(const FFL_Graph *graph)
 	}
 }
 
+void
+ffl_rescale(FFL_Graph *graph, float wanted_width, float wanted_height)
+{
+	float min_x = INFINITY, min_y = INFINITY, max_x = -INFINITY, max_y = -INFINITY;
+	for (int v = 0; v < graph->nverts; v++) {
+		const FFL_Vertex *vert = &graph->verts[v];
+		if (vert->x < min_x) min_x = vert->x;
+		if (vert->y < min_y) min_y = vert->y;
+		if (vert->x > max_x) max_x = vert->x;
+		if (vert->y > max_y) max_y = vert->y;
+	}
+	printf("Graph bounding box: (%f, %f) - (%f, %f)\n", min_x, min_y, max_x, max_y);
+
+	float scale1 = wanted_width  / (max_x - min_x);
+	float scale2 = wanted_height / (max_y - min_y);
+	float scale = scale1 < scale2 ? scale1 : scale2;
+
+	for (int v = 0; v < graph->nverts; v++) {
+		FFL_Vertex *vert = &graph->verts[v];
+		vert->x = (vert->x - min_x) * scale;
+		vert->y = (vert->y - min_y) * scale;
+	}
+}
+
 int
 main(int argc, char **argv)
 {
@@ -63,24 +87,16 @@ main(int argc, char **argv)
 
 	graph->spring_strength    = 0.8f;
 	graph->repulsion_strength = 5.0f;
-	graph->repulsion_accuracy = 0.005f;
+	graph->repulsion_accuracy = 0.1f;
 	ffl_compute_layout(graph);
 
-	float min_x = INFINITY, min_y = INFINITY, max_x = -INFINITY, max_y = -INFINITY;
-	for (int v = 0; v < graph->nverts; v++) {
-		const FFL_Vertex *vert = &graph->verts[v];
-		if (vert->x < min_x) min_x = vert->x;
-		if (vert->y < min_y) min_y = vert->y;
-		if (vert->x > max_x) max_x = vert->x;
-		if (vert->y > max_y) max_y = vert->y;
-	}
-	printf("Graph bounding box: (%f, %f) - (%f, %f)\n", min_x, min_y, max_x, max_y);
+	ffl_rescale(graph, 2048 - 100, 2048 - 100);
 
 	FFL_Image image;
-	image.width    = (int) (max_x - min_x) + 100;
-	image.height   = (int) (max_y - min_y) + 100;
-	image.offset_x = (int) -min_x + 50;
-	image.offset_y = (int) -min_y + 50;
+	image.width    = 2048;
+	image.height   = 2048;
+	image.offset_x = 50;
+	image.offset_y = 50;
 	image.pixels   = calloc(image.width, image.height);
 
 #if 1
