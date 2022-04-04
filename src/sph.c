@@ -88,3 +88,30 @@ ffl_treeify(FFL_Graph *graph)
 {
 	graph->root_clump = build_clump(graph, 0, graph->nverts);
 }
+
+static void
+free_clump_rec(FFL_Clump *clump)
+{
+	if (!clump->is_leaf) {
+		free_clump_rec(clump->nut);
+		free_clump_rec(clump->geb);
+	}
+	free(clump);
+}
+
+void
+ffl_linearize(FFL_Graph *graph)
+{
+	free_clump_rec(graph->root_clump);
+
+	FFL_Vertex *new_verts = calloc(graph->cverts, sizeof *new_verts);
+
+	for (int v = 0; v < graph->nverts; v++) {
+		const FFL_Vertex *vert = &graph->verts[v];
+		new_verts[vert->serial] = *vert;
+	}
+
+	free(graph->verts);
+	graph->verts = new_verts;
+}
+

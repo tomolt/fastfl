@@ -88,6 +88,7 @@ main(int argc, char **argv)
 #else
 	ffl_treeify(graph);
 	ffl_draw_clumping(graph, &image);
+	ffl_linearize(graph);
 #endif
 
 	FILE *outfile = fopen("out.pgm", "wb");

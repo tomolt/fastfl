@@ -55,4 +55,5 @@ void ffl_grow_vertices(FFL_Graph *graph, int nverts);
 void ffl_grow_edges(FFL_Graph *graph, int nedges);
 
 void ffl_treeify(FFL_Graph *graph);
+void ffl_linearize(FFL_Graph *graph);
 
