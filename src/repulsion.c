@@ -60,7 +60,7 @@ repulse_clumps(FFL_Graph *graph, FFL_Clump *c0, FFL_Clump *c1)
 	float dy = c1->sum_y / c1->mass - c0->sum_y / c0->mass;
 	float dist_sq = dx * dx + dy * dy;
 
-	if (c0->variance * c1->variance / dist_sq <= graph->threshold) {
+	if (dist_sq == 0.0f || c0->variance * c1->variance / dist_sq <= graph->threshold) {
 		repulse_inner_inner(graph, c0, c1);
 		return;
 	}

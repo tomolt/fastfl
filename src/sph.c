@@ -90,11 +90,18 @@ ffl_treeify(FFL_Graph *graph)
 }
 
 static void
-free_clump_rec(FFL_Clump *clump)
+declump_rec(FFL_Graph *graph, FFL_Clump *clump, float force_x, float force_y)
 {
-	if (!clump->is_leaf) {
-		free_clump_rec(clump->nut);
-		free_clump_rec(clump->geb);
+	force_x += clump->force_x;
+	force_y += clump->force_y;
+	if (clump->is_leaf) {
+		for (int v = clump->low; v < clump->high; v++) {
+			graph->verts[v].force_x += force_x;
+			graph->verts[v].force_y += force_y;
+		}
+	} else {
+		declump_rec(graph, clump->nut, force_x, force_y);
+		declump_rec(graph, clump->geb, force_x, force_y);
 	}
 	free(clump);
 }
@@ -102,7 +109,7 @@ free_clump_rec(FFL_Clump *clump)
 void
 ffl_linearize(FFL_Graph *graph)
 {
-	free_clump_rec(graph->root_clump);
+	declump_rec(graph, graph->root_clump, 0.0f, 0.0f);
 
 	FFL_Vertex *new_verts = calloc(graph->cverts, sizeof *new_verts);
 
