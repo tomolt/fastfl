@@ -8,6 +8,8 @@
 
 #define FFL_PI 3.14159265358979323846
 
+extern void ffl_repulsion_accelerated(FFL_Graph *graph);
+
 static void
 ffl_initial_layout(FFL_Graph *graph)
 {
@@ -51,29 +53,35 @@ ffl_spring_forces(FFL_Graph *graph)
 	}
 }
 
+void
+ffl_repulsion_1onN(FFL_Graph *graph, int t, int low, int high)
+{
+	FFL_Vertex *target = &graph->verts[t];
+	for (int s = low; s < high; s++) {
+		FFL_Vertex *source = &graph->verts[s];
+
+		float dx = target->x - source->x;
+		float dy = target->y - source->y;
+		float dist_sq = dx * dx + dy * dy;
+		if (dist_sq == 0.0f) continue;
+
+		float force = graph->repulsion_strength / dist_sq;
+		dx *= force;
+		dy *= force;
+
+		source->force_x -= dx;
+		source->force_y -= dy;
+
+		target->force_x += dx;
+		target->force_y += dy;
+	}
+}
+
 static void
-ffl_repulsion_forces(FFL_Graph *graph)
+ffl_repulsion_naive(FFL_Graph *graph)
 {
 	for (int t = 0; t < graph->nverts; t++) {
-		FFL_Vertex *target = &graph->verts[t];
-		for (int s = 0; s < t; s++) {
-			FFL_Vertex *source = &graph->verts[s];
-
-			float dx = target->x - source->x;
-			float dy = target->y - source->y;
-			float dist_sq = dx * dx + dy * dy;
-			if (dist_sq == 0.0f) continue;
-
-			float force = graph->repulsion_strength / dist_sq;
-			dx *= force;
-			dy *= force;
-
-			source->force_x -= dx;
-			source->force_y -= dy;
-
-			target->force_x += dx;
-			target->force_y += dy;
-		}
+		ffl_repulsion_1onN(graph, t, 0, t);
 	}
 }
 
@@ -101,7 +109,7 @@ ffl_compute_layout(FFL_Graph *graph)
 	int rounds = TOTAL_ROUNDS;
 	while (rounds--) {
 		ffl_spring_forces(graph);
-		ffl_repulsion_forces(graph);
+		ffl_repulsion_naive(graph);
 		ffl_apply_forces(graph);
 	}
 }

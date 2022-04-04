@@ -24,6 +24,7 @@ struct FFL_Clump {
 	float force_y;
 	float sum_x;
 	float sum_y;
+	float variance;
 	int   mass;
 	bool  is_leaf;
 	union {
@@ -41,6 +42,7 @@ struct FFL_Clump {
 struct FFL_Graph {
 	float spring_strength;
 	float repulsion_strength;
+	float repulsion_accuracy;
 	int nverts;
 	int cverts;
 	int nedges;
