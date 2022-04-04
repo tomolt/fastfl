@@ -26,7 +26,7 @@ ffl_initial_layout(FFL_Graph *graph)
 }
 
 static void
-ffl_spring_forces(FFL_Graph *graph, float strength)
+ffl_spring_forces(FFL_Graph *graph)
 {
 	for (int e = 0; e < graph->nedges; e++) {
 		FFL_Edge   *edge   = &graph->edges[e];
@@ -41,7 +41,7 @@ ffl_spring_forces(FFL_Graph *graph, float strength)
 		dy /= dlen;
 
 		float force = dlen - edge->d_length;
-		force *= 0.5f * strength;
+		force *= 0.5f * graph->spring_strength;
 
 		source->force_x += dx * force;
 		source->force_y += dy * force;
@@ -52,7 +52,7 @@ ffl_spring_forces(FFL_Graph *graph, float strength)
 }
 
 static void
-ffl_repulsion_forces(FFL_Graph *graph, float strength)
+ffl_repulsion_forces(FFL_Graph *graph)
 {
 	for (int t = 0; t < graph->nverts; t++) {
 		FFL_Vertex *target = &graph->verts[t];
@@ -64,7 +64,7 @@ ffl_repulsion_forces(FFL_Graph *graph, float strength)
 			float dist_sq = dx * dx + dy * dy;
 			if (dist_sq == 0.0f) continue;
 
-			float force = strength / dist_sq;
+			float force = graph->repulsion_strength / dist_sq;
 			dx *= force;
 			dy *= force;
 
@@ -92,7 +92,7 @@ ffl_apply_forces(FFL_Graph *graph)
 }
 
 void
-ffl_compute_layout(FFL_Graph *graph, const FFL_Settings *settings)
+ffl_compute_layout(FFL_Graph *graph)
 {
 	const int TOTAL_ROUNDS = 200;
 
@@ -100,9 +100,8 @@ ffl_compute_layout(FFL_Graph *graph, const FFL_Settings *settings)
 
 	int rounds = TOTAL_ROUNDS;
 	while (rounds--) {
-		float temperature = 0.1f + 0.9f * (float) rounds / TOTAL_ROUNDS;
-		ffl_spring_forces(graph, temperature * settings->spring_strength);
-		ffl_repulsion_forces(graph, temperature * settings->repulsion_strength);
+		ffl_spring_forces(graph);
+		ffl_repulsion_forces(graph);
 		ffl_apply_forces(graph);
 	}
 }

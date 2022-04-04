@@ -39,6 +39,8 @@ struct FFL_Clump {
 };
 
 struct FFL_Graph {
+	float spring_strength;
+	float repulsion_strength;
 	int nverts;
 	int cverts;
 	int nedges;

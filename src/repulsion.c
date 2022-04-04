@@ -35,10 +35,11 @@ repulse_inner_inner()
 	dx *= force;
 	dy *= force;
 
-	c0->force_x -= dx;
-	c0->force_y -= dy;
-	c1->force_x += dx;
-	c1->force_y += dy;
+	c0->force_x -= dx * c1->mass;
+	c0->force_y -= dy * c1->mass;
+
+	c1->force_x += dx * c0->mass;
+	c1->force_y += dy * c0->mass;
 }
 
 static void

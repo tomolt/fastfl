@@ -61,10 +61,9 @@ main(int argc, char **argv)
 
 	dump_graph(graph);
 
-	FFL_Settings settings;
-	settings.spring_strength    = 0.8f;
-	settings.repulsion_strength = 3.0f;
-	ffl_compute_layout(graph, &settings);
+	graph->spring_strength    = 0.8f;
+	graph->repulsion_strength = 3.0f;
+	ffl_compute_layout(graph);
 
 	float min_x = INFINITY, min_y = INFINITY, max_x = -INFINITY, max_y = -INFINITY;
 	for (int v = 0; v < graph->nverts; v++) {
