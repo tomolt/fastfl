@@ -20,8 +20,8 @@ ffl_initial_layout(FFL_Graph *graph)
 		vert->x = radius * cosf(angle);
 		vert->y = radius * sinf(angle);
 
-		vert->forcex = 0.0f;
-		vert->forcey = 0.0f;
+		vert->force_x = 0.0f;
+		vert->force_y = 0.0f;
 	}
 }
 
@@ -40,14 +40,14 @@ ffl_spring_forces(FFL_Graph *graph, float strength)
 		dx /= dlen;
 		dy /= dlen;
 
-		float force = dlen - edge->dlength;
+		float force = dlen - edge->d_length;
 		force *= 0.5f * strength;
 
-		source->forcex += dx * force;
-		source->forcey += dy * force;
+		source->force_x += dx * force;
+		source->force_y += dy * force;
 
-		target->forcex -= dx * force;
-		target->forcey -= dy * force;
+		target->force_x -= dx * force;
+		target->force_y -= dy * force;
 	}
 }
 
@@ -68,11 +68,11 @@ ffl_repulsion_forces(FFL_Graph *graph, float strength)
 			dx *= force;
 			dy *= force;
 
-			source->forcex -= dx;
-			source->forcey -= dy;
+			source->force_x -= dx;
+			source->force_y -= dy;
 
-			target->forcex += dx;
-			target->forcey += dy;
+			target->force_x += dx;
+			target->force_y += dy;
 		}
 	}
 }
@@ -83,11 +83,11 @@ ffl_apply_forces(FFL_Graph *graph)
 	for (int v = 0; v < graph->nverts; v++) {
 		FFL_Vertex *vert = &graph->verts[v];
 
-		vert->x += vert->forcex;
-		vert->y += vert->forcey;
+		vert->x += vert->force_x;
+		vert->y += vert->force_y;
 		
-		vert->forcex = 0.0f;
-		vert->forcey = 0.0f;
+		vert->force_x = 0.0f;
+		vert->force_y = 0.0f;
 	}
 }
 

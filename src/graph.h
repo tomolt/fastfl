@@ -8,15 +8,15 @@ typedef struct FFL_Graph  FFL_Graph;
 struct FFL_Vertex {
 	float x;
 	float y;
-	float forcex;
-	float forcey;
+	float force_x;
+	float force_y;
 	int   serial;
 };
 
 struct FFL_Edge {
 	int   source;
 	int   target;
-	float dlength; /* desired length */
+	float d_length; /* desired length */
 };
 
 struct FFL_Clump {
