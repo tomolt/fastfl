@@ -9,18 +9,14 @@ struct condition {
 	float threshold;
 };
 
-static inline bool
-eval_condition(const struct condition *cond, const FFL_Vertex *vert)
-{
-	return (cond->x_axis ? vert->x : vert->y) <= cond->threshold;
-}
+#define EVAL_CONDITION(c,v) (((c)->x_axis ? (v)->x : (v)->y) <= (c)->threshold)
 
 static int
 partition(FFL_Graph *graph, int low, int high, const struct condition *cond)
 {
 	for (;;) {
-		while (low < high && eval_condition(cond, &graph->verts[low])) low++;
-		while (low < high && !eval_condition(cond, &graph->verts[high-1])) high--;
+		while (low < high && EVAL_CONDITION(cond, &graph->verts[low])) low++;
+		while (low < high && !EVAL_CONDITION(cond, &graph->verts[high-1])) high--;
 		if (!(low < high)) break;
 		FFL_Vertex temp      = graph->verts[low];
 		graph->verts[low]    = graph->verts[high-1];
