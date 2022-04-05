@@ -21,6 +21,10 @@ ffl_free_graph(FFL_Graph *graph)
 {
 	free(graph->verts);
 	free(graph->edges);
+	for (int i = 0; i < graph->num_pools; i++) {
+		free(graph->clump_pools[i]);
+	}
+	free(graph->clump_pools);
 	free(graph);
 }
 

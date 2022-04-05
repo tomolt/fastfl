@@ -1,9 +1,11 @@
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 #include <assert.h>
 
 #include "graph.h"
 #include "pcg32.h"
+#include "realloc.h"
 
 struct condition {
 	bool  x_axis;
@@ -58,10 +60,25 @@ split_heuristic(const FFL_Graph *graph, int low, int high, struct condition *con
 }
 
 static FFL_Clump *
+alloc_clump(FFL_Graph *graph)
+{
+	int p = graph->next_clump / CLUMPS_PER_POOL;
+	int c = graph->next_clump % CLUMPS_PER_POOL;
+	graph->next_clump++;
+	if (p >= graph->num_pools) {
+		graph->num_pools++;
+		graph->clump_pools = reallocarray(graph->clump_pools, graph->num_pools, sizeof *graph->clump_pools);
+		graph->clump_pools[p] = malloc(CLUMPS_PER_POOL * sizeof (FFL_Clump));
+	}
+	return &graph->clump_pools[p][c];
+}
+
+static FFL_Clump *
 build_clump(FFL_Graph *graph, int low, int high)
 {
 	assert(low < high);
-	FFL_Clump *clump = calloc(1, sizeof *clump);
+	FFL_Clump *clump = alloc_clump(graph);
+	memset(clump, 0, sizeof *clump);
 	clump->mass = high - low;
 	struct condition cond;
 	if (split_heuristic(graph, low, high, &cond)) {
@@ -126,13 +143,13 @@ declump_rec(FFL_Graph *graph, FFL_Clump *clump, float force_x, float force_y)
 		declump_rec(graph, clump->nut, force_x, force_y);
 		declump_rec(graph, clump->geb, force_x, force_y);
 	}
-	free(clump);
 }
 
 void
 ffl_linearize(FFL_Graph *graph)
 {
 	declump_rec(graph, graph->root_clump, 0.0f, 0.0f);
+	graph->next_clump = 0;
 
 	FFL_Vertex *new_verts = calloc(graph->cverts, sizeof *new_verts);
 

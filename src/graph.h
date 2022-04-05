@@ -1,5 +1,7 @@
 #include <stdbool.h>
 
+#define CLUMPS_PER_POOL 64
+
 typedef struct FFL_Vertex FFL_Vertex;
 typedef struct FFL_Edge   FFL_Edge;
 typedef struct FFL_Clump  FFL_Clump;
@@ -50,6 +52,10 @@ struct FFL_Graph {
 	FFL_Vertex *verts;
 	FFL_Edge   *edges;
 	FFL_Clump  *root_clump;
+
+	FFL_Clump **clump_pools;
+	int         num_pools;
+	int         next_clump;
 };
 
 FFL_Graph *ffl_make_graph(void);
