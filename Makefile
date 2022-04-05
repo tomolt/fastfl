@@ -2,8 +2,8 @@ CC=gcc
 LD=gcc
 AR=ar
 
-CFLAGS=-g -Wall -Wextra -pedantic -std=c11 -Iinclude
-LDFLAGS=-g
+CFLAGS=-Os -fno-inline -Wall -Wextra -pedantic -std=c11 -Iinclude
+LDFLAGS=-Os -fno-inline
 ARFLAGS=rcs
 LIBS=-lm -lpthread
 
