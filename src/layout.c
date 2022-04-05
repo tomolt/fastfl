@@ -37,19 +37,26 @@ ffl_spring_forces(FFL_Graph *graph)
 
 		float dx = target.x - source.x;
 		float dy = target.y - source.y;
-		float dlen = sqrtf(dx * dx + dy * dy);
-		if (dlen == 0.0f) continue;
-		dx /= dlen;
-		dy /= dlen;
+		float dist_sq = dx * dx + dy * dy;
+		if (dist_sq == 0.0f) continue;
+		
+		float inv_dist = dist_sq;
+		__asm__ inline ("rsqrtss %0, %0" : "+v"(inv_dist));
+		float dist = inv_dist;
+		__asm__ inline ("rcpss %0, %0" : "+v"(dist));
 
-		float force = dlen - edge->d_length;
-		force *= 0.5f * graph->spring_strength;
+		float factor = 0.5f * graph->spring_strength;
+		factor *= dist - edge->d_length;
+		factor *= inv_dist;
 
-		graph->verts_force[edge->source].x += dx * force;
-		graph->verts_force[edge->source].y += dy * force;
+		dx *= factor;
+		dy *= factor;
 
-		graph->verts_force[edge->target].x -= dx * force;
-		graph->verts_force[edge->target].y -= dy * force;
+		graph->verts_force[edge->source].x += dx;
+		graph->verts_force[edge->source].y += dy;
+
+		graph->verts_force[edge->target].x -= dx;
+		graph->verts_force[edge->target].y -= dy;
 	}
 }
 
