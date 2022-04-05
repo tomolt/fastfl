@@ -32,8 +32,8 @@ repulsion_rec(FFL_Graph *graph, FFL_Clump *c0, FFL_Clump *c1)
 		return;
 	}
 
-	float dx = c1->com_x - c0->com_x;
-	float dy = c1->com_y - c0->com_y;
+	float dx = c1->com.x - c0->com.x;
+	float dy = c1->com.y - c0->com.y;
 	float dist_sq = dx * dx + dy * dy;
 
 	if (c0->variance * c1->variance < graph->repulsion_accuracy * dist_sq) {
@@ -41,11 +41,11 @@ repulsion_rec(FFL_Graph *graph, FFL_Clump *c0, FFL_Clump *c1)
 		dx *= force;
 		dy *= force;
 
-		c0->force_x -= dx * c1->mass;
-		c0->force_y -= dy * c1->mass;
+		c0->force.x -= dx * c1->mass;
+		c0->force.y -= dy * c1->mass;
 
-		c1->force_x += dx * c0->mass;
-		c1->force_y += dy * c0->mass;
+		c1->force.x += dx * c0->mass;
+		c1->force.y += dy * c0->mass;
 		return;
 	}
 

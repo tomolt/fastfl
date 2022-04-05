@@ -56,8 +56,8 @@ ffl_draw_graph(const FFL_Graph *graph, FFL_Image *image)
 static int
 draw_clump(const FFL_Graph *graph, const FFL_Clump *clump, FFL_Image *image)
 {
-	float x = clump->com_x;
-	float y = clump->com_y;
+	float x = clump->com.x;
+	float y = clump->com.y;
 	int r;
 	if (clump->is_leaf) {
 		for (int v = clump->low; v < clump->high; v++) {
@@ -67,8 +67,8 @@ draw_clump(const FFL_Graph *graph, const FFL_Clump *clump, FFL_Image *image)
 		}
 		r = 3;
 	} else {
-		draw_line(image, x, y, clump->nut->com_x, clump->nut->com_y);
-		draw_line(image, x, y, clump->geb->com_x, clump->geb->com_y);
+		draw_line(image, x, y, clump->nut->com.x, clump->nut->com.y);
+		draw_line(image, x, y, clump->geb->com.x, clump->geb->com.y);
 		int r1 = draw_clump(graph, clump->nut, image);
 		int r2 = draw_clump(graph, clump->geb, image);
 		r = (r1 > r2 ? r1 : r2) + 1;

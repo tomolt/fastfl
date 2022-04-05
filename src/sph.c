@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <string.h>
 #include <math.h>
 #include <assert.h>
 
@@ -81,47 +80,52 @@ build_clump(FFL_Graph *graph, int low, int high)
 {
 	assert(low < high);
 	FFL_Clump *clump = alloc_clump(graph);
-	memset(clump, 0, sizeof *clump);
+	clump->force = (FFL_Vec2) { 0.0f, 0.0f };
 	clump->mass = high - low;
+	float inv_mass = 1.0f / clump->mass;
 	struct condition cond;
 	if (split_heuristic(graph, low, high, &cond)) {
+		clump->is_leaf = false;
+
 		int border = partition(graph, low, high, &cond);
 		clump->nut = build_clump(graph, low, border);
 		clump->geb = build_clump(graph, border, high);
 
-		clump->com_x  = clump->nut->com_x * clump->nut->mass;
-		clump->com_x += clump->geb->com_x * clump->geb->mass;
-		clump->com_x /= clump->mass;
+		clump->com.x  = clump->nut->com.x * clump->nut->mass;
+		clump->com.x += clump->geb->com.x * clump->geb->mass;
+		clump->com.x *= inv_mass;
 		
-		clump->com_y  = clump->nut->com_y * clump->nut->mass;
-		clump->com_y += clump->geb->com_y * clump->geb->mass;
-		clump->com_y /= clump->mass;
+		clump->com.y  = clump->nut->com.y * clump->nut->mass;
+		clump->com.y += clump->geb->com.y * clump->geb->mass;
+		clump->com.y *= inv_mass;
 		
-		float dx0 = clump->nut->com_x - clump->com_x;
-		float dy0 = clump->nut->com_y - clump->com_y;
-		float dx1 = clump->geb->com_x - clump->com_x;
-		float dy1 = clump->geb->com_y - clump->com_y;
+		float dx0 = clump->nut->com.x - clump->com.x;
+		float dy0 = clump->nut->com.y - clump->com.y;
+		float dx1 = clump->geb->com.x - clump->com.x;
+		float dy1 = clump->geb->com.y - clump->com.y;
 		clump->variance  = sqrtf(dx0 * dx0 + dy0 * dy0) * clump->nut->mass;
 		clump->variance += sqrtf(dx1 * dx1 + dy1 * dy1) * clump->geb->mass;
-		clump->variance /= clump->mass;
+		clump->variance *= inv_mass;
 	} else {
 		clump->is_leaf = true;
 		clump->low     = low;
 		clump->high    = high;
 
+		clump->com = (FFL_Vec2) { 0.0f, 0.0f };
 		for (int i = low; i < high; i++) {
-			clump->com_x += graph->verts_pos[i].x;
-			clump->com_y += graph->verts_pos[i].y;
+			clump->com.x += graph->verts_pos[i].x;
+			clump->com.y += graph->verts_pos[i].y;
 		}
-		clump->com_x /= clump->mass;
-		clump->com_y /= clump->mass;
+		clump->com.x *= inv_mass;
+		clump->com.y *= inv_mass;
 		
+		clump->variance = 0.0f;
 		for (int i = low; i < high; i++) {
-			float dx = graph->verts_pos[i].x - clump->com_x;
-			float dy = graph->verts_pos[i].y - clump->com_y;
+			float dx = graph->verts_pos[i].x - clump->com.x;
+			float dy = graph->verts_pos[i].y - clump->com.y;
 			clump->variance += sqrtf(dx * dx + dy * dy);
 		}
-		clump->variance /= clump->mass;
+		clump->variance *= inv_mass;
 	}
 	return clump;
 }
@@ -135,8 +139,8 @@ ffl_treeify(FFL_Graph *graph)
 static void
 declump_rec(FFL_Graph *graph, FFL_Clump *clump, float force_x, float force_y)
 {
-	force_x += clump->force_x;
-	force_y += clump->force_y;
+	force_x += clump->force.x;
+	force_y += clump->force.y;
 	if (clump->is_leaf) {
 		for (int v = clump->low; v < clump->high; v++) {
 			graph->verts_force[v].x += force_x;
