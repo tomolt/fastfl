@@ -37,7 +37,7 @@ split_heuristic(const FFL_Graph *graph, int low, int high, struct condition *con
 {
 	static pcg32_random_t heuristic_rand;
 
-	if (high - low <= 8) return false;
+	if (high - low <= 20) return false;
 
 	float min_x =  INFINITY, min_y =  INFINITY;
 	float max_x = -INFINITY, max_y = -INFINITY;

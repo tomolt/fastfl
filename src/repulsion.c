@@ -2,8 +2,9 @@
 
 #include "graph.h"
 
+extern void ffl_repulsion_2on2(FFL_Graph *graph, int i, int j);
 extern void ffl_repulsion_1onN(FFL_Graph *graph, int t, int low, int high);
-void ffl_repulsion_naive(FFL_Graph *graph);
+extern void ffl_repulsion_naive(FFL_Graph *graph);
 
 static void
 repulsion_rec(FFL_Graph *graph, FFL_Clump *c0, FFL_Clump *c1)
@@ -11,8 +12,17 @@ repulsion_rec(FFL_Graph *graph, FFL_Clump *c0, FFL_Clump *c1)
 	/* TODO this case can be a separate function, much cleaner. */
 	if (c0 == c1) {
 		if (c0->is_leaf) {
-			for (int v = c0->low; v < c0->high; v++) {
-				ffl_repulsion_1onN(graph, v, c0->low, v);
+			int i, j;
+			for (i = c0->low; i + 2 <= c0->high; i += 2) {
+				for (j = c0->low; j + 2 <= i; j += 2) {
+					ffl_repulsion_2on2(graph, i, j);
+				}
+				if (j < i) {
+					ffl_repulsion_1onN(graph, i-1, i, i+1);
+				}
+			}
+			if (i < c0->high) {
+				ffl_repulsion_1onN(graph, c0->high-1, c0->low, c0->high-1);
 			}
 		} else {
 			repulsion_rec(graph, c0->nut, c0->nut);
@@ -40,8 +50,17 @@ repulsion_rec(FFL_Graph *graph, FFL_Clump *c0, FFL_Clump *c1)
 	}
 
 	if (c0->is_leaf && c1->is_leaf) {
-		for (int v = c0->low; v < c0->high; v++) {
-			ffl_repulsion_1onN(graph, v, c1->low, c1->high);
+		int i, j = c1->low;
+		for (i = c0->low; i + 2 <= c0->high; i += 2) {
+			for (j = c1->low; j + 2 <= c1->high; j += 2) {
+				ffl_repulsion_2on2(graph, i, j);
+			}
+		}
+		if (i < c0->high) {
+			ffl_repulsion_1onN(graph, c0->high-1, c1->low, c1->high);
+		}
+		if (j < c1->high) {
+			ffl_repulsion_1onN(graph, c1->high-1, c0->low, i < c0->high ? c0->high-1 : c0->high);
 		}
 		return;
 	}
