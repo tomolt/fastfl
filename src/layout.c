@@ -65,7 +65,10 @@ ffl_repulsion_1onN(FFL_Graph *graph, int t, int low, int high)
 		float dist_sq = dx * dx + dy * dy;
 		if (dist_sq == 0.0f) continue;
 
-		float force = graph->repulsion_strength / dist_sq;
+		float inv_dist_sq = dist_sq;
+		__asm__ inline ("rcpss %0, %0" : "+v"(inv_dist_sq));
+
+		float force = graph->repulsion_strength * inv_dist_sq;
 		dx *= force;
 		dy *= force;
 
