@@ -2,17 +2,14 @@
 
 #define CLUMPS_PER_POOL 64
 
-typedef struct FFL_Vertex FFL_Vertex;
+typedef struct FFL_Vec2   FFL_Vec2;
 typedef struct FFL_Edge   FFL_Edge;
 typedef struct FFL_Clump  FFL_Clump;
 typedef struct FFL_Graph  FFL_Graph;
 
-struct FFL_Vertex {
+struct FFL_Vec2 {
 	float x;
 	float y;
-	float force_x;
-	float force_y;
-	int   serial;
 };
 
 struct FFL_Edge {
@@ -49,7 +46,11 @@ struct FFL_Graph {
 	int cverts;
 	int nedges;
 	int cedges;
-	FFL_Vertex *verts;
+
+	FFL_Vec2 *verts_pos;
+	FFL_Vec2 *verts_force;
+	int      *verts_serial;
+	
 	FFL_Edge   *edges;
 	FFL_Clump  *root_clump;
 

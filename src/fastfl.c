@@ -32,11 +32,11 @@ ffl_rescale(FFL_Graph *graph, float wanted_width, float wanted_height)
 {
 	float min_x = INFINITY, min_y = INFINITY, max_x = -INFINITY, max_y = -INFINITY;
 	for (int v = 0; v < graph->nverts; v++) {
-		const FFL_Vertex *vert = &graph->verts[v];
-		if (vert->x < min_x) min_x = vert->x;
-		if (vert->y < min_y) min_y = vert->y;
-		if (vert->x > max_x) max_x = vert->x;
-		if (vert->y > max_y) max_y = vert->y;
+		FFL_Vec2 pos = graph->verts_pos[v];
+		if (pos.x < min_x) min_x = pos.x;
+		if (pos.y < min_y) min_y = pos.y;
+		if (pos.x > max_x) max_x = pos.x;
+		if (pos.y > max_y) max_y = pos.y;
 	}
 	printf("Graph bounding box: (%f, %f) - (%f, %f)\n", min_x, min_y, max_x, max_y);
 
@@ -45,9 +45,10 @@ ffl_rescale(FFL_Graph *graph, float wanted_width, float wanted_height)
 	float scale = scale1 < scale2 ? scale1 : scale2;
 
 	for (int v = 0; v < graph->nverts; v++) {
-		FFL_Vertex *vert = &graph->verts[v];
-		vert->x = (vert->x - min_x) * scale;
-		vert->y = (vert->y - min_y) * scale;
+		FFL_Vec2 pos = graph->verts_pos[v];
+		pos.x = (pos.x - min_x) * scale;
+		pos.y = (pos.y - min_y) * scale;
+		graph->verts_pos[v] = pos;
 	}
 }
 

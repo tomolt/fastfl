@@ -12,18 +12,21 @@ struct condition {
 	float threshold;
 };
 
-#define EVAL_CONDITION(c,v) (((c)->x_axis ? (v)->x : (v)->y) <= (c)->threshold)
+#define SWAP(t,a,b) do { t _ = (a); (a) = (b); (b) = _; } while (0)
+#define EVAL_CONDITION(c,p) (((c)->x_axis ? (p).x : (p).y) <= (c)->threshold)
 
 static int
 partition(FFL_Graph *graph, int low, int high, const struct condition *cond)
 {
 	for (;;) {
-		while (low < high && EVAL_CONDITION(cond, &graph->verts[low])) low++;
-		while (low < high && !EVAL_CONDITION(cond, &graph->verts[high-1])) high--;
+		while (low < high && EVAL_CONDITION(cond, graph->verts_pos[low])) low++;
+		while (low < high && !EVAL_CONDITION(cond, graph->verts_pos[high-1])) high--;
 		if (!(low < high)) break;
-		FFL_Vertex temp      = graph->verts[low];
-		graph->verts[low]    = graph->verts[high-1];
-		graph->verts[high-1] = temp;
+
+		SWAP(FFL_Vec2, graph->verts_pos[low], graph->verts_pos[high-1]);
+		SWAP(FFL_Vec2, graph->verts_force[low], graph->verts_force[high-1]);
+		SWAP(int, graph->verts_serial[low], graph->verts_serial[high-1]);
+
 		low++, high--;
 	}
 	return low;
@@ -41,11 +44,11 @@ split_heuristic(const FFL_Graph *graph, int low, int high, struct condition *con
 
 	for (int i = 0; i < 6 || (min_x >= max_x && min_y >= max_y); i++) {
 		int v = low + (pcg32_random_r(&heuristic_rand) % (high - low));
-		const FFL_Vertex *vert = &graph->verts[v];
-		if (vert->x < min_x) min_x = vert->x;
-		if (vert->y < min_y) min_y = vert->y;
-		if (vert->x > max_x) max_x = vert->x;
-		if (vert->y > max_y) max_y = vert->y;
+		FFL_Vec2 pos = graph->verts_pos[v];
+		if (pos.x < min_x) min_x = pos.x;
+		if (pos.y < min_y) min_y = pos.y;
+		if (pos.x > max_x) max_x = pos.x;
+		if (pos.y > max_y) max_y = pos.y;
 	}
 
 	if (max_x - min_x >= max_y - min_y) {
@@ -107,15 +110,15 @@ build_clump(FFL_Graph *graph, int low, int high)
 		clump->high    = high;
 
 		for (int i = low; i < high; i++) {
-			clump->com_x += graph->verts[i].x;
-			clump->com_y += graph->verts[i].y;
+			clump->com_x += graph->verts_pos[i].x;
+			clump->com_y += graph->verts_pos[i].y;
 		}
 		clump->com_x /= clump->mass;
 		clump->com_y /= clump->mass;
 		
 		for (int i = low; i < high; i++) {
-			float dx = graph->verts[i].x - clump->com_x;
-			float dy = graph->verts[i].y - clump->com_y;
+			float dx = graph->verts_pos[i].x - clump->com_x;
+			float dy = graph->verts_pos[i].y - clump->com_y;
 			clump->variance += sqrtf(dx * dx + dy * dy);
 		}
 		clump->variance /= clump->mass;
@@ -136,8 +139,8 @@ declump_rec(FFL_Graph *graph, FFL_Clump *clump, float force_x, float force_y)
 	force_y += clump->force_y;
 	if (clump->is_leaf) {
 		for (int v = clump->low; v < clump->high; v++) {
-			graph->verts[v].force_x += force_x;
-			graph->verts[v].force_y += force_y;
+			graph->verts_force[v].x += force_x;
+			graph->verts_force[v].y += force_y;
 		}
 	} else {
 		declump_rec(graph, clump->nut, force_x, force_y);
@@ -151,14 +154,23 @@ ffl_linearize(FFL_Graph *graph)
 	declump_rec(graph, graph->root_clump, 0.0f, 0.0f);
 	graph->next_clump = 0;
 
-	FFL_Vertex *new_verts = calloc(graph->cverts, sizeof *new_verts);
+	FFL_Vec2 *new_pos    = calloc(graph->cverts, sizeof *new_pos);
+	FFL_Vec2 *new_force  = calloc(graph->cverts, sizeof *new_force);
+	int      *new_serial = calloc(graph->cverts, sizeof *new_serial);
 
 	for (int v = 0; v < graph->nverts; v++) {
-		const FFL_Vertex *vert = &graph->verts[v];
-		new_verts[vert->serial] = *vert;
+		int s = graph->verts_serial[v];
+		new_pos[s]    = graph->verts_pos[v];
+		new_force[s]  = graph->verts_force[v];
+		new_serial[s] = s;
 	}
 
-	free(graph->verts);
-	graph->verts = new_verts;
+	free(graph->verts_pos);
+	free(graph->verts_force);
+	free(graph->verts_serial);
+
+	graph->verts_pos    = new_pos;
+	graph->verts_force  = new_force;
+	graph->verts_serial = new_serial;
 }
 

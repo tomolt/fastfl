@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <math.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "graph.h"
 
@@ -16,27 +17,26 @@ ffl_initial_layout(FFL_Graph *graph)
 	float radius = 10.0f * (float) graph->nverts / 2.0f;
 
 	for (int v = 0; v < graph->nverts; v++) {
-		FFL_Vertex *vert = &graph->verts[v];
 		float angle = (float) v / graph->nverts * 2.0f * FFL_PI;
-
-		vert->x = radius * cosf(angle);
-		vert->y = radius * sinf(angle);
-
-		vert->force_x = 0.0f;
-		vert->force_y = 0.0f;
+		FFL_Vec2 pos;
+		pos.x = radius * cosf(angle);
+		pos.y = radius * sinf(angle);
+		graph->verts_pos[v] = pos;
 	}
+
+	memset(graph->verts_force, 0, graph->nverts * sizeof *graph->verts_force);
 }
 
 static void
 ffl_spring_forces(FFL_Graph *graph)
 {
 	for (int e = 0; e < graph->nedges; e++) {
-		FFL_Edge   *edge   = &graph->edges[e];
-		FFL_Vertex *source = &graph->verts[edge->source];
-		FFL_Vertex *target = &graph->verts[edge->target];
+		FFL_Edge *edge = &graph->edges[e];
+		FFL_Vec2 source = graph->verts_pos[edge->source];
+		FFL_Vec2 target = graph->verts_pos[edge->target];
 
-		float dx = target->x - source->x;
-		float dy = target->y - source->y;
+		float dx = target.x - source.x;
+		float dy = target.y - source.y;
 		float dlen = sqrtf(dx * dx + dy * dy);
 		if (dlen == 0.0f) continue;
 		dx /= dlen;
@@ -45,23 +45,23 @@ ffl_spring_forces(FFL_Graph *graph)
 		float force = dlen - edge->d_length;
 		force *= 0.5f * graph->spring_strength;
 
-		source->force_x += dx * force;
-		source->force_y += dy * force;
+		graph->verts_force[edge->source].x += dx * force;
+		graph->verts_force[edge->source].y += dy * force;
 
-		target->force_x -= dx * force;
-		target->force_y -= dy * force;
+		graph->verts_force[edge->target].x -= dx * force;
+		graph->verts_force[edge->target].y -= dy * force;
 	}
 }
 
 void
 ffl_repulsion_1onN(FFL_Graph *graph, int t, int low, int high)
 {
-	FFL_Vertex *target = &graph->verts[t];
+	FFL_Vec2 target = graph->verts_pos[t];
 	for (int s = low; s < high; s++) {
-		FFL_Vertex *source = &graph->verts[s];
+		FFL_Vec2 source = graph->verts_pos[s];
 
-		float dx = target->x - source->x;
-		float dy = target->y - source->y;
+		float dx = target.x - source.x;
+		float dy = target.y - source.y;
 		float dist_sq = dx * dx + dy * dy;
 		if (dist_sq == 0.0f) continue;
 
@@ -72,11 +72,11 @@ ffl_repulsion_1onN(FFL_Graph *graph, int t, int low, int high)
 		dx *= force;
 		dy *= force;
 
-		source->force_x -= dx;
-		source->force_y -= dy;
+		graph->verts_force[s].x -= dx;
+		graph->verts_force[s].y -= dy;
 
-		target->force_x += dx;
-		target->force_y += dy;
+		graph->verts_force[t].x += dx;
+		graph->verts_force[t].y += dy;
 	}
 }
 
@@ -92,20 +92,19 @@ static void
 ffl_apply_forces(FFL_Graph *graph, float temperature)
 {
 	for (int v = 0; v < graph->nverts; v++) {
-		FFL_Vertex *vert = &graph->verts[v];
+		FFL_Vec2 force = graph->verts_force[v];
 
-		float magnitude = sqrtf(vert->force_x * vert->force_x + vert->force_y * vert->force_y);
+		float magnitude = sqrtf(force.x * force.x + force.y * force.y);
 		if (magnitude > temperature) {
-			vert->force_x *= temperature / magnitude;
-			vert->force_y *= temperature / magnitude;
+			force.x *= temperature / magnitude;
+			force.y *= temperature / magnitude;
 		}
 
-		vert->x += vert->force_x;
-		vert->y += vert->force_y;
-		
-		vert->force_x = 0.0f;
-		vert->force_y = 0.0f;
+		graph->verts_pos[v].x += force.x;
+		graph->verts_pos[v].y += force.y;
 	}
+
+	memset(graph->verts_force, 0, graph->nverts * sizeof *graph->verts_force);
 }
 
 void
@@ -119,7 +118,6 @@ ffl_compute_layout(FFL_Graph *graph)
 	while (rounds) {
 		ffl_spring_forces(graph);
 		ffl_repulsion_accelerated(graph);
-		//ffl_repulsion_naive(graph);
 		ffl_apply_forces(graph, 100.0f * ((float) rounds / TOTAL_ROUNDS));
 		rounds--;
 	}

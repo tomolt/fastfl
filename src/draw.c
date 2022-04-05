@@ -39,17 +39,17 @@ void
 ffl_draw_graph(const FFL_Graph *graph, FFL_Image *image)
 {
 	for (int e = 0; e < graph->nedges; e++) {
-		const FFL_Edge   *edge   = &graph->edges[e];
-		const FFL_Vertex *source = &graph->verts[edge->source];
-		const FFL_Vertex *target = &graph->verts[edge->target];
+		const FFL_Edge *edge = &graph->edges[e];
+		FFL_Vec2 source = graph->verts_pos[edge->source];
+		FFL_Vec2 target = graph->verts_pos[edge->target];
 		draw_line(image,
-			(int) source->x, (int) source->y,
-			(int) target->x, (int) target->y);
+			(int) source.x, (int) source.y,
+			(int) target.x, (int) target.y);
 	}
 
 	for (int v = 0; v < graph->nverts; v++) {
-		const FFL_Vertex *vert = &graph->verts[v];
-		draw_rhombus(image, (int) vert->x, (int) vert->y, 5);
+		FFL_Vec2 pos = graph->verts_pos[v];
+		draw_rhombus(image, (int) pos.x, (int) pos.y, 5);
 	}
 }
 
@@ -61,9 +61,9 @@ draw_clump(const FFL_Graph *graph, const FFL_Clump *clump, FFL_Image *image)
 	int r;
 	if (clump->is_leaf) {
 		for (int v = clump->low; v < clump->high; v++) {
-			const FFL_Vertex *vert = &graph->verts[v];
-			draw_line(image, x, y, vert->x, vert->y);
-			draw_rhombus(image, vert->x, vert->y, 2);
+			FFL_Vec2 pos = graph->verts_pos[v];
+			draw_line(image, x, y, pos.x, pos.y);
+			draw_rhombus(image, pos.x, pos.y, 2);
 		}
 		r = 3;
 	} else {
