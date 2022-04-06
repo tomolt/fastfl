@@ -152,15 +152,20 @@ ffl_apply_forces(FFL_Graph *graph, float temperature)
 void
 ffl_compute_layout(FFL_Graph *graph)
 {
-	const int TOTAL_ROUNDS = 2000;
+	const int TOTAL_ROUNDS = 500;
+	const float eccentricity = 1.2f;
 
 	ffl_initial_layout(graph);
 
 	int rounds = TOTAL_ROUNDS;
 	while (rounds) {
+		float temperature = (float) rounds / TOTAL_ROUNDS;
+		temperature = powf(temperature, eccentricity);
+		temperature *= 3000.0f;
+
 		ffl_spring_forces(graph);
 		ffl_repulsion_accelerated(graph);
-		ffl_apply_forces(graph, 100.0f * ((float) rounds / TOTAL_ROUNDS));
+		ffl_apply_forces(graph, temperature);
 		rounds--;
 	}
 }
