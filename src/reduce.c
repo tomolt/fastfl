@@ -37,25 +37,36 @@ compute_mapping(const FFL_Graph *graph, int *mapping)
 static void
 transfer_edges(const FFL_Graph *graph, const int *mapping, FFL_Graph *reduced)
 {
-	for (int e = 0; e < graph->nedges; e++) {
-		const FFL_Edge *edge = &graph->edges[e];
+	int r, w, n;
+
+	for (r = 0, w = 0; r < graph->nedges; r++) {
+		const FFL_Edge *edge = &graph->edges[r];
 		int source = mapping[edge->source];
 		int target = mapping[edge->target];
-		reduced->edges[e] = (FFL_Edge) { source, target, edge->d_length };
-	}
-
-	qsort(reduced->edges, graph->nedges, sizeof *reduced->edges, edge_cmp);
-
-	FFL_Edge prev = { -1, -1, 0.0f };
-	int w = 0;
-	for (int r = 0; r < graph->nedges; r++) {
-		const FFL_Edge *edge = &reduced->edges[r];
-		if (edge->source != edge->target && !(edge->source == prev.source && edge->target == prev.target)) {
-			reduced->edges[w++] = *edge;
+		if (source != target) {
+			reduced->edges[w++] = (FFL_Edge) { source, target, edge->d_length };
 		}
-		prev = *edge;
 	}
-	
+	reduced->nedges = w;
+
+	qsort(reduced->edges, reduced->nedges, sizeof *reduced->edges, edge_cmp);
+
+	r = 0, w = 0;
+	while (r < reduced->nedges) {
+		const FFL_Edge *base = &reduced->edges[r];
+		float d_length = base->d_length;
+		n = 1;
+		while (r + n < reduced->nedges &&
+			!edge_cmp(&reduced->edges[r + n], base)) {
+			d_length += reduced->edges[r + n].d_length;
+			n++;
+		}
+		reduced->edges[w++] = (FFL_Edge) {
+			base->source,
+			base->target,
+			d_length / n
+		};
+	}
 	reduced->nedges = w;
 }
 
