@@ -66,3 +66,6 @@ void ffl_grow_edges(FFL_Graph *graph, int nedges);
 void ffl_treeify(FFL_Graph *graph);
 void ffl_linearize(FFL_Graph *graph);
 
+FFL_Graph *ffl_reduce_graph(const FFL_Graph *graph, int *mapping);
+void ffl_interpolate_layout(const FFL_Graph *reduced, const int *mapping, FFL_Graph *graph);
+

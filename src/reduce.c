@@ -2,6 +2,7 @@
 
 #include "graph.h"
 #include "realloc.h"
+#include "pcg32.h"
 
 static int
 edge_cmp(const void *p1, const void *p2)
@@ -71,16 +72,14 @@ transfer_edges(const FFL_Graph *graph, const int *mapping, FFL_Graph *reduced)
 }
 
 FFL_Graph *
-ffl_reduce_graph(const FFL_Graph *graph)
+ffl_reduce_graph(const FFL_Graph *graph, int *mapping)
 {
 	if (graph->nverts < 16) {
 		return NULL;
 	}
 
-	int *mapping = calloc(graph->nverts, sizeof *graph);
 	int nverts = compute_mapping(graph, mapping);
 	if (100 * nverts > 80 * graph->nverts) {
-		free(mapping);
 		return NULL;
 	}
 
@@ -91,7 +90,19 @@ ffl_reduce_graph(const FFL_Graph *graph)
 
 	transfer_edges(graph, mapping, reduced);
 
-	free(mapping);
 	return reduced;
+}
+
+void
+ffl_interpolate_layout(const FFL_Graph *reduced, const int *mapping, FFL_Graph *graph)
+{
+	static pcg32_random_t rng;
+	for (int v = 0; v < graph->nverts; v++) {
+		int r = mapping[v];
+		float off_x = 2.0f * ((float) pcg32_random_r(&rng) / UINT32_MAX) - 1.0f;
+		float off_y = 2.0f * ((float) pcg32_random_r(&rng) / UINT32_MAX) - 1.0f;
+		graph->verts_pos[v].x = reduced->verts_pos[r].x + off_x;
+		graph->verts_pos[v].y = reduced->verts_pos[r].y + off_y;
+	}
 }
 
