@@ -149,10 +149,12 @@ ffl_apply_forces(FFL_Graph *graph, float temperature)
 	memset(graph->verts_force, 0, graph->nverts * sizeof *graph->verts_force);
 }
 
-void
-ffl_compute_layout(FFL_Graph *graph)
+static void
+layout_graph(FFL_Graph *graph)
 {
-	const int TOTAL_ROUNDS = 500;
+	printf("Laying out graph of size %d.\n", graph->nverts);
+
+	const int TOTAL_ROUNDS = 50;
 	const float eccentricity = 1.2f;
 
 	ffl_initial_layout(graph);
@@ -168,5 +170,21 @@ ffl_compute_layout(FFL_Graph *graph)
 		ffl_apply_forces(graph, temperature);
 		rounds--;
 	}
+}
+
+void
+ffl_compute_layout(FFL_Graph *graph)
+{
+	int *mapping = calloc(graph->nverts, sizeof *mapping);
+	FFL_Graph *reduced = ffl_reduce_graph(graph, mapping);
+	if (reduced) {
+		reduced->spring_strength = graph->spring_strength;
+		reduced->repulsion_strength = graph->repulsion_strength;
+		reduced->repulsion_accuracy = graph->repulsion_accuracy;
+		ffl_compute_layout(reduced);
+		ffl_interpolate_layout(reduced, mapping, graph);
+	}
+	layout_graph(graph);
+	free(mapping);
 }
 

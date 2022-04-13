@@ -52,8 +52,7 @@ transfer_edges(const FFL_Graph *graph, const int *mapping, FFL_Graph *reduced)
 
 	qsort(reduced->edges, reduced->nedges, sizeof *reduced->edges, edge_cmp);
 
-	r = 0, w = 0;
-	while (r < reduced->nedges) {
+	for (r = 0, w = 0; r < reduced->nedges; r++) {
 		const FFL_Edge *base = &reduced->edges[r];
 		float d_length = base->d_length;
 		n = 1;
