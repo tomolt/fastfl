@@ -22,7 +22,7 @@ struct FFL_Clump {
 	FFL_Vec2 force;
 	FFL_Vec2 com;
 	float variance;
-	int   mass;
+	float charge;
 	bool  is_leaf;
 	union {
 		struct {
@@ -40,6 +40,7 @@ struct FFL_Graph {
 	float spring_strength;
 	float repulsion_strength;
 	float repulsion_accuracy;
+
 	int nverts;
 	int cverts;
 	int nedges;
@@ -48,6 +49,7 @@ struct FFL_Graph {
 	FFL_Vec2 *verts_pos;
 	FFL_Vec2 *verts_force;
 	int      *verts_serial;
+	float    *verts_charge;
 	
 	FFL_Edge   *edges;
 	FFL_Clump  *root_clump;

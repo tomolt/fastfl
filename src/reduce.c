@@ -84,6 +84,14 @@ ffl_reduce_graph(const FFL_Graph *graph, int *mapping)
 
 	FFL_Graph *reduced = ffl_make_graph();
 	ffl_grow_vertices(reduced, nverts);
+
+	for (int v = 0; v < reduced->nverts; v++) {
+		reduced->verts_charge[v] = 0.0f;
+	}
+	for (int v = 0; v < graph->nverts; v++) {
+		reduced->verts_charge[mapping[v]] += graph->verts_charge[v];
+	}
+
 	reduced->cedges = graph->cedges;
 	reduced->edges = reallocarray(reduced->edges, reduced->cedges, sizeof *reduced->edges);
 

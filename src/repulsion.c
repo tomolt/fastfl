@@ -41,11 +41,11 @@ repulsion_rec(FFL_Graph *graph, FFL_Clump *c0, FFL_Clump *c1)
 		dx *= force;
 		dy *= force;
 
-		c0->force.x -= dx * c1->mass;
-		c0->force.y -= dy * c1->mass;
+		c0->force.x -= dx * c1->charge;
+		c0->force.y -= dy * c1->charge;
 
-		c1->force.x += dx * c0->mass;
-		c1->force.y += dy * c0->mass;
+		c1->force.x += dx * c0->charge;
+		c1->force.y += dy * c0->charge;
 		return;
 	}
 
