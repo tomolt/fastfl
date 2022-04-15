@@ -122,8 +122,6 @@ layout_graph(FFL_Graph *graph)
 	const int TOTAL_ROUNDS = 50;
 	const float eccentricity = 1.2f;
 
-	ffl_initial_layout(graph);
-
 	int rounds = TOTAL_ROUNDS;
 	while (rounds) {
 		float temperature = (float) rounds / TOTAL_ROUNDS;
@@ -132,6 +130,7 @@ layout_graph(FFL_Graph *graph)
 
 		ffl_spring_forces(graph);
 		ffl_repulsion_accelerated(graph);
+		//ffl_repulsion_naive(graph);
 		ffl_apply_forces(graph, temperature);
 		rounds--;
 	}
@@ -149,6 +148,8 @@ ffl_compute_layout(FFL_Graph *graph)
 		ffl_compute_layout(reduced);
 		ffl_interpolate_layout(reduced, mapping, graph);
 		ffl_free_graph(reduced);
+	} else {
+		ffl_initial_layout(graph);
 	}
 	layout_graph(graph);
 	free(mapping);

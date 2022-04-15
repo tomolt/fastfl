@@ -81,7 +81,7 @@ main(int argc, char **argv)
 	dump_graph(graph);
 
 	graph->spring_strength    = 0.8f;
-	graph->repulsion_strength = 2.0f;
+	graph->repulsion_strength = 0.6f;
 	graph->repulsion_accuracy = 0.1f;
 	ffl_compute_layout(graph);
 
