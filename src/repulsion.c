@@ -7,6 +7,23 @@ extern void ffl_repulsion_1onN(FFL_Graph *graph, int t, int low, int high);
 extern void ffl_repulsion_naive(FFL_Graph *graph);
 
 static void
+repulsion_NonM(FFL_Graph *graph, int low0, int high0, int low1, int high1)
+{
+	int i, j = low1;
+	for (i = low0; i + 2 <= high0; i += 2) {
+		for (j = low1; j + 2 <= high1; j += 2) {
+			ffl_repulsion_2on2(graph, i, j);
+		}
+	}
+	if (i < high0) {
+		ffl_repulsion_1onN(graph, high0-1, low1, high1);
+	}
+	if (j < high1) {
+		ffl_repulsion_1onN(graph, high1-1, low0, i < high0 ? high0-1 : high0);
+	}
+}
+
+static void
 repulsion_rec(FFL_Graph *graph, FFL_Clump *c0, FFL_Clump *c1)
 {
 	/* TODO this case can be a separate function, much cleaner. */
@@ -50,18 +67,7 @@ repulsion_rec(FFL_Graph *graph, FFL_Clump *c0, FFL_Clump *c1)
 	}
 
 	if (c0->is_leaf && c1->is_leaf) {
-		int i, j = c1->low;
-		for (i = c0->low; i + 2 <= c0->high; i += 2) {
-			for (j = c1->low; j + 2 <= c1->high; j += 2) {
-				ffl_repulsion_2on2(graph, i, j);
-			}
-		}
-		if (i < c0->high) {
-			ffl_repulsion_1onN(graph, c0->high-1, c1->low, c1->high);
-		}
-		if (j < c1->high) {
-			ffl_repulsion_1onN(graph, c1->high-1, c0->low, i < c0->high ? c0->high-1 : c0->high);
-		}
+		repulsion_NonM(graph, c0->low, c0->high, c1->low, c1->high);
 		return;
 	}
 
