@@ -148,6 +148,7 @@ ffl_compute_layout(FFL_Graph *graph)
 		reduced->repulsion_accuracy = graph->repulsion_accuracy;
 		ffl_compute_layout(reduced);
 		ffl_interpolate_layout(reduced, mapping, graph);
+		ffl_free_graph(reduced);
 	}
 	layout_graph(graph);
 	free(mapping);
