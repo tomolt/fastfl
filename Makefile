@@ -7,7 +7,7 @@ LDFLAGS=-g -fno-inline
 ARFLAGS=rcs
 LIBS=-lm -lpthread
 
-LIB_SRCS=src/graph.c src/layout.c src/sph.c src/repulsion.c src/reduce.c
+LIB_SRCS=src/graph.c src/layout.c src/sph.c src/repulsion.c src/reduce.c src/x86/repulsion.c
 LIB_OBJS=$(patsubst %.c,build/%.o,$(LIB_SRCS))
 LIB_DEPS=$(patsubst %.c,build/%.d,$(LIB_SRCS))
 
@@ -46,6 +46,9 @@ build/tester: $(TST_OBJS) build/libfastfl.a
 build/src/%.o: src/%.c | build/src
 	$(CC) $(CFLAGS) -c $< -o $@ -MMD -MP
 
+build/src/x86/%.o: src/x86/%.c | build/src/x86
+	$(CC) $(CFLAGS) -c $< -o $@ -MMD -MP
+
 build/app/%.o: app/%.c | build/app
 	$(CC) $(CFLAGS) -c $< -o $@ -MMD -MP
 
@@ -53,6 +56,9 @@ build/test/%.o: test/%.c | build/test
 	$(CC) $(CFLAGS) -c $< -o $@ -MMD -MP
 
 build/src:
+	mkdir -p $@
+
+build/src/x86:
 	mkdir -p $@
 
 build/app:
