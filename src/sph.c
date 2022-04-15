@@ -4,7 +4,6 @@
 
 #include "graph.h"
 #include "pcg32.h"
-#include "realloc.h"
 
 struct condition {
 	bool  x_axis;
@@ -63,24 +62,10 @@ split_heuristic(const FFL_Graph *graph, int low, int high, struct condition *con
 }
 
 static FFL_Clump *
-alloc_clump(FFL_Graph *graph)
-{
-	int p = graph->next_clump / CLUMPS_PER_POOL;
-	int c = graph->next_clump % CLUMPS_PER_POOL;
-	graph->next_clump++;
-	if (p >= graph->num_pools) {
-		graph->num_pools++;
-		graph->clump_pools = reallocarray(graph->clump_pools, graph->num_pools, sizeof *graph->clump_pools);
-		graph->clump_pools[p] = malloc(CLUMPS_PER_POOL * sizeof (FFL_Clump));
-	}
-	return &graph->clump_pools[p][c];
-}
-
-static FFL_Clump *
 form_clumps_rec(FFL_Graph *graph, int low, int high)
 {
 	assert(low < high);
-	FFL_Clump *clump = alloc_clump(graph);
+	FFL_Clump *clump = ffl_alloc_clump(graph);
 	clump->force = (FFL_Vec2) { 0.0f, 0.0f };
 	struct condition cond;
 	if (split_heuristic(graph, low, high, &cond)) {

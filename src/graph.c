@@ -81,3 +81,17 @@ ffl_graph_sort_edges(FFL_Graph *graph)
 		sizeof *graph->edges, ffl_compare_edges);
 }
 
+FFL_Clump *
+ffl_alloc_clump(FFL_Graph *graph)
+{
+	int p = graph->next_clump / CLUMPS_PER_POOL;
+	int c = graph->next_clump % CLUMPS_PER_POOL;
+	graph->next_clump++;
+	if (p >= graph->num_pools) {
+		graph->num_pools++;
+		graph->clump_pools = reallocarray(graph->clump_pools, graph->num_pools, sizeof *graph->clump_pools);
+		graph->clump_pools[p] = malloc(CLUMPS_PER_POOL * sizeof (FFL_Clump));
+	}
+	return &graph->clump_pools[p][c];
+}
+

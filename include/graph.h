@@ -68,6 +68,8 @@ void ffl_grow_edges(FFL_Graph *graph, int nedges);
 int  ffl_compare_edges(const void *p1, const void *p2);
 void ffl_graph_sort_edges(FFL_Graph *graph);
 
+FFL_Clump *ffl_alloc_clump(FFL_Graph *graph);
+
 void ffl_form_clumps(FFL_Graph *graph);
 void ffl_homogenize(FFL_Graph *graph);
 
