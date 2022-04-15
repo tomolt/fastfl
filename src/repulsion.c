@@ -2,9 +2,45 @@
 
 #include "graph.h"
 
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
+
 extern void ffl_repulsion_2on2(FFL_Graph *graph, int i, int j);
 extern void ffl_repulsion_1onN(FFL_Graph *graph, int t, int low, int high);
 extern void ffl_repulsion_naive(FFL_Graph *graph);
+
+static inline bool
+approximation_heuristic(const FFL_Rect *rect0, const FFL_Rect *rect1, float accuracy)
+{
+	float dx = rect0->min.x < rect1->min.x ?
+		rect1->min.x - rect0->max.x :
+		rect0->min.x - rect1->max.x;
+	dx = MAX(dx, 0.0f);
+	dx *= dx;
+
+	float dy = rect0->min.y < rect1->min.y ?
+		rect1->min.y - rect0->max.y :
+		rect0->min.y - rect1->max.y;
+	dy = MAX(dy, 0.0f);
+	dy *= dy;
+
+	float sx = (rect0->max.x - rect0->min.x)
+		* (rect1->max.x - rect1->min.x);
+	float sy = (rect0->max.y - rect0->min.y)
+		* (rect1->max.y - rect1->min.y);
+	
+	return accuracy * dx > sx || accuracy * dy > sy;
+}
+
+static inline int
+compare_rect_area(const FFL_Rect *rect0, const FFL_Rect *rect1)
+{
+	float a0 = (rect0->max.x - rect0->min.x) *
+		(rect0->max.y - rect0->min.y);
+	float a1 = (rect1->max.x - rect1->min.x) *
+		(rect1->max.y - rect1->min.y);
+	return a0 - a1 < 0.0f ? -1 : 1;
+}
 
 static void
 repulsion_self(FFL_Graph *graph, int low, int high)
@@ -55,11 +91,11 @@ repulsion_rec(FFL_Graph *graph, FFL_Clump *c0, FFL_Clump *c1)
 		return;
 	}
 
-	float dx = c1->com.x - c0->com.x;
-	float dy = c1->com.y - c0->com.y;
-	float dist_sq = dx * dx + dy * dy;
+	if (approximation_heuristic(&c0->rect, &c1->rect, graph->repulsion_accuracy)) {
+		float dx = c1->com.x - c0->com.x;
+		float dy = c1->com.y - c0->com.y;
+		float dist_sq = dx * dx + dy * dy;
 
-	if (c0->variance * c1->variance < graph->repulsion_accuracy * dist_sq) {
 		float force = graph->repulsion_strength / dist_sq;
 		dx *= force;
 		dy *= force;
@@ -78,7 +114,8 @@ repulsion_rec(FFL_Graph *graph, FFL_Clump *c0, FFL_Clump *c1)
 	}
 
 	/* TODO this conditional works for now, but it's not intuitive at all. */
-	if (!c1->is_leaf && (c0->variance < c1->variance || c0->is_leaf)) {
+	if (c0->is_leaf ||
+		(!c1->is_leaf && compare_rect_area(&c0->rect, &c1->rect) < 0)) {
 		assert(!c1->is_leaf);
 		repulsion_rec(graph, c0, c1->child0);
 		repulsion_rec(graph, c0, c1->child1);

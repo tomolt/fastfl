@@ -31,9 +31,9 @@ struct FFL_Edge {
 };
 
 struct FFL_Clump {
+	FFL_Rect rect;
 	FFL_Vec2 force;
 	FFL_Vec2 com;
-	float variance;
 	float charge;
 	bool  is_leaf;
 	union {
@@ -71,7 +71,7 @@ struct FFL_Graph {
 	int         next_clump;
 };
 
-FFL_Rect ffl_bounding_box(FFL_Vec2 *vecs, int low, int high);
+void ffl_bounding_box(FFL_Vec2 *vecs, int low, int high, FFL_Rect *rect);
 
 FFL_Graph *ffl_make_graph(void);
 void ffl_free_graph(FFL_Graph *graph);

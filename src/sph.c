@@ -12,6 +12,8 @@ struct condition {
 
 #define SWAP(t,a,b) do { t _ = (a); (a) = (b); (b) = _; } while (0)
 #define EVAL_CONDITION(c,p) (((c)->x_axis ? (p).x : (p).y) <= (c)->threshold)
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
 
 static int
 partition(FFL_Graph *graph, int low, int high, const struct condition *cond)
@@ -83,14 +85,11 @@ form_clumps_rec(FFL_Graph *graph, int low, int high)
 		clump->com.y  = clump->child0->com.y * clump->child0->charge;
 		clump->com.y += clump->child1->com.y * clump->child1->charge;
 		clump->com.y /= clump->charge;
-		
-		float dx0 = clump->child0->com.x - clump->com.x;
-		float dy0 = clump->child0->com.y - clump->com.y;
-		float dx1 = clump->child1->com.x - clump->com.x;
-		float dy1 = clump->child1->com.y - clump->com.y;
-		clump->variance  = sqrtf(dx0 * dx0 + dy0 * dy0) * clump->child0->charge;
-		clump->variance += sqrtf(dx1 * dx1 + dy1 * dy1) * clump->child1->charge;
-		clump->variance /= clump->charge;
+
+		clump->rect.min.x = MIN(clump->child0->rect.min.x, clump->child1->rect.min.x);
+		clump->rect.min.y = MIN(clump->child0->rect.min.y, clump->child1->rect.min.y);
+		clump->rect.max.x = MAX(clump->child0->rect.max.x, clump->child1->rect.max.x);
+		clump->rect.max.y = MAX(clump->child0->rect.max.y, clump->child1->rect.max.y);
 	} else {
 		clump->is_leaf = true;
 		clump->low     = low;
@@ -106,14 +105,8 @@ form_clumps_rec(FFL_Graph *graph, int low, int high)
 		}
 		clump->com.x /= clump->charge;
 		clump->com.y /= clump->charge;
-		
-		clump->variance = 0.0f;
-		for (int i = low; i < high; i++) {
-			float dx = graph->verts_pos[i].x - clump->com.x;
-			float dy = graph->verts_pos[i].y - clump->com.y;
-			clump->variance += sqrtf(dx * dx + dy * dy);
-		}
-		clump->variance /= clump->charge;
+
+		ffl_bounding_box(graph->verts_pos, low, high, &clump->rect);
 	}
 	return clump;
 }

@@ -30,7 +30,8 @@ dump_graph(const FFL_Graph *graph)
 void
 ffl_rescale(FFL_Graph *graph, float wanted_width, float wanted_height)
 {
-	FFL_Rect rect = ffl_bounding_box(graph->verts_pos, 0, graph->nverts);
+	FFL_Rect rect;
+	ffl_bounding_box(graph->verts_pos, 0, graph->nverts, &rect);
 	printf("Graph bounding box: (%f, %f) - (%f, %f)\n", rect.min.x, rect.min.y, rect.max.x, rect.max.y);
 
 	float scale1 = wanted_width  / (rect.max.x - rect.min.x);
