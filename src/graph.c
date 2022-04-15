@@ -66,3 +66,18 @@ ffl_grow_edges(FFL_Graph *graph, int nedges)
 	graph->nedges = nedges;
 }
 
+int
+ffl_compare_edges(const void *p1, const void *p2)
+{
+	const FFL_Edge *e1 = p1, *e2 = p2;
+	int d = e1->source - e2->source;
+	return d ? d : e1->target - e2->target;
+}
+
+void
+ffl_graph_sort_edges(FFL_Graph *graph)
+{
+	qsort(graph->edges, graph->nedges,
+		sizeof *graph->edges, ffl_compare_edges);
+}
+

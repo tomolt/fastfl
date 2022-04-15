@@ -5,14 +5,6 @@
 #include "pcg32.h"
 
 static int
-edge_cmp(const void *p1, const void *p2)
-{
-	const FFL_Edge *e1 = p1, *e2 = p2;
-	int d = e1->source - e2->source;
-	return d ? d : e1->target - e2->target;
-}
-
-static int
 compute_mapping(const FFL_Graph *graph, int *mapping)
 {
 	int nverts = 0;
@@ -50,14 +42,14 @@ transfer_edges(const FFL_Graph *graph, const int *mapping, FFL_Graph *reduced)
 	}
 	reduced->nedges = w;
 
-	qsort(reduced->edges, reduced->nedges, sizeof *reduced->edges, edge_cmp);
+	ffl_graph_sort_edges(reduced);
 
 	for (r = 0, w = 0; r < reduced->nedges; r++) {
 		const FFL_Edge *base = &reduced->edges[r];
 		float d_length = base->d_length;
 		n = 1;
 		while (r + n < reduced->nedges &&
-			!edge_cmp(&reduced->edges[r + n], base)) {
+			!ffl_compare_edges(&reduced->edges[r + n], base)) {
 			d_length += reduced->edges[r + n].d_length;
 			n++;
 		}
