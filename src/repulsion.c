@@ -92,8 +92,8 @@ repulsion_rec(FFL_Graph *graph, FFL_Clump *c0, FFL_Clump *c1)
 void
 ffl_repulsion_accelerated(FFL_Graph *graph)
 {
-	ffl_treeify(graph);
+	ffl_form_clumps(graph);
 	repulsion_rec(graph, graph->root_clump, graph->root_clump);
-	ffl_linearize(graph);
+	ffl_homogenize(graph);
 }
 

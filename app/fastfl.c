@@ -103,9 +103,9 @@ main(int argc, char **argv)
 #if 1
 	ffl_draw_graph(graph, &image);
 #else
-	ffl_treeify(graph);
+	ffl_form_clumps(graph);
 	ffl_draw_clumping(graph, &image);
-	ffl_linearize(graph);
+	ffl_homogenize(graph);
 #endif
 
 	FILE *outfile = fopen("out.pgm", "wb");

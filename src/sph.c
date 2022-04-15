@@ -35,7 +35,7 @@ partition(FFL_Graph *graph, int low, int high, const struct condition *cond)
 static bool
 split_heuristic(const FFL_Graph *graph, int low, int high, struct condition *cond)
 {
-	static pcg32_random_t heuristic_rand;
+	static pcg32_random_t rng;
 
 	if (high - low <= 20) return false;
 
@@ -43,7 +43,7 @@ split_heuristic(const FFL_Graph *graph, int low, int high, struct condition *con
 	float max_x = -INFINITY, max_y = -INFINITY;
 
 	for (int i = 0; i < 6 || (min_x >= max_x && min_y >= max_y); i++) {
-		int v = low + (pcg32_random_r(&heuristic_rand) % (high - low));
+		int v = low + (pcg32_random_r(&rng) % (high - low));
 		FFL_Vec2 pos = graph->verts_pos[v];
 		if (pos.x < min_x) min_x = pos.x;
 		if (pos.y < min_y) min_y = pos.y;
@@ -77,7 +77,7 @@ alloc_clump(FFL_Graph *graph)
 }
 
 static FFL_Clump *
-build_clump(FFL_Graph *graph, int low, int high)
+form_clumps_rec(FFL_Graph *graph, int low, int high)
 {
 	assert(low < high);
 	FFL_Clump *clump = alloc_clump(graph);
@@ -87,8 +87,8 @@ build_clump(FFL_Graph *graph, int low, int high)
 		clump->is_leaf = false;
 
 		int border = partition(graph, low, high, &cond);
-		clump->child0 = build_clump(graph, low, border);
-		clump->child1 = build_clump(graph, border, high);
+		clump->child0 = form_clumps_rec(graph, low, border);
+		clump->child1 = form_clumps_rec(graph, border, high);
 
 		clump->charge = clump->child0->charge + clump->child1->charge;
 
@@ -135,13 +135,13 @@ build_clump(FFL_Graph *graph, int low, int high)
 }
 
 void
-ffl_treeify(FFL_Graph *graph)
+ffl_form_clumps(FFL_Graph *graph)
 {
-	graph->root_clump = build_clump(graph, 0, graph->nverts);
+	graph->root_clump = form_clumps_rec(graph, 0, graph->nverts);
 }
 
 static void
-declump_rec(FFL_Graph *graph, FFL_Clump *clump, float force_x, float force_y)
+gather_forces_rec(FFL_Graph *graph, FFL_Clump *clump, float force_x, float force_y)
 {
 	force_x += clump->force.x;
 	force_y += clump->force.y;
@@ -151,15 +151,15 @@ declump_rec(FFL_Graph *graph, FFL_Clump *clump, float force_x, float force_y)
 			graph->verts_force[v].y += force_y;
 		}
 	} else {
-		declump_rec(graph, clump->child0, force_x, force_y);
-		declump_rec(graph, clump->child1, force_x, force_y);
+		gather_forces_rec(graph, clump->child0, force_x, force_y);
+		gather_forces_rec(graph, clump->child1, force_x, force_y);
 	}
 }
 
 void
-ffl_linearize(FFL_Graph *graph)
+ffl_homogenize(FFL_Graph *graph)
 {
-	declump_rec(graph, graph->root_clump, 0.0f, 0.0f);
+	gather_forces_rec(graph, graph->root_clump, 0.0f, 0.0f);
 	graph->next_clump = 0;
 
 	FFL_Vec2 *new_pos    = calloc(graph->cverts, sizeof *new_pos);

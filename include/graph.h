@@ -68,8 +68,8 @@ void ffl_grow_edges(FFL_Graph *graph, int nedges);
 int  ffl_compare_edges(const void *p1, const void *p2);
 void ffl_graph_sort_edges(FFL_Graph *graph);
 
-void ffl_treeify(FFL_Graph *graph);
-void ffl_linearize(FFL_Graph *graph);
+void ffl_form_clumps(FFL_Graph *graph);
+void ffl_homogenize(FFL_Graph *graph);
 
 FFL_Graph *ffl_reduce_graph(const FFL_Graph *graph, int *mapping);
 void ffl_interpolate_layout(const FFL_Graph *reduced, const int *mapping, FFL_Graph *graph);
