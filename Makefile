@@ -11,7 +11,7 @@ LIB_SRCS=src/graph.c src/layout.c src/sph.c src/repulsion.c src/reduce.c
 LIB_OBJS=$(patsubst %.c,build/%.o,$(LIB_SRCS))
 LIB_DEPS=$(patsubst %.c,build/%.d,$(LIB_SRCS))
 
-APP_SRCS=src/fastfl.c src/import.c src/draw.c
+APP_SRCS=app/fastfl.c app/import.c app/draw.c
 APP_OBJS=$(patsubst %.c,build/%.o,$(APP_SRCS))
 APP_DEPS=$(patsubst %.c,build/%.d,$(APP_SRCS))
 
@@ -46,10 +46,16 @@ build/tester: $(TST_OBJS) build/libfastfl.a
 build/src/%.o: src/%.c | build/src
 	$(CC) $(CFLAGS) -c $< -o $@ -MMD -MP
 
+build/app/%.o: app/%.c | build/app
+	$(CC) $(CFLAGS) -c $< -o $@ -MMD -MP
+
 build/test/%.o: test/%.c | build/test
 	$(CC) $(CFLAGS) -c $< -o $@ -MMD -MP
 
 build/src:
+	mkdir -p $@
+
+build/app:
 	mkdir -p $@
 
 build/test:
