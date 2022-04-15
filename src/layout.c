@@ -46,7 +46,7 @@ ffl_spring_forces(FFL_Graph *graph)
 		__asm__ inline ("rcpss %0, %0" : "+v"(dist));
 
 		float factor = 0.5f * graph->spring_strength;
-		factor *= dist - edge->d_length;
+		factor *= log2f(dist / edge->d_length);
 		factor *= inv_dist;
 
 		dx *= factor;
