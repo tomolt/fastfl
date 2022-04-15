@@ -21,10 +21,9 @@ partition(FFL_Graph *graph, int low, int high, const struct condition *cond)
 		while (low < high && !EVAL_CONDITION(cond, graph->verts_pos[high-1])) high--;
 		if (!(low < high)) break;
 
-		SWAP(FFL_Vec2, graph->verts_pos[low], graph->verts_pos[high-1]);
-		SWAP(FFL_Vec2, graph->verts_force[low], graph->verts_force[high-1]);
-		SWAP(int, graph->verts_serial[low], graph->verts_serial[high-1]);
-		SWAP(float, graph->verts_charge[low], graph->verts_charge[high-1]);
+#		define X(type,field) SWAP(type, graph->field[low], graph->field[high-1]);
+		EXPAND_FOR_EACH_VERTEX_FIELD(X);
+#		undef X
 
 		low++, high--;
 	}
@@ -147,27 +146,19 @@ ffl_homogenize(FFL_Graph *graph)
 	gather_forces_rec(graph, graph->root_clump, 0.0f, 0.0f);
 	graph->next_clump = 0;
 
-	FFL_Vec2 *new_pos    = calloc(graph->cverts, sizeof *new_pos);
-	FFL_Vec2 *new_force  = calloc(graph->cverts, sizeof *new_force);
-	int      *new_serial = calloc(graph->cverts, sizeof *new_serial);
-	float    *new_charge = calloc(graph->cverts, sizeof *new_charge);
+#	define X(type,field) type *new_##field = calloc(graph->cverts, sizeof (type));
+	EXPAND_FOR_EACH_VERTEX_FIELD(X);
+#	undef X
 
 	for (int v = 0; v < graph->nverts; v++) {
 		int s = graph->verts_serial[v];
-		new_pos[s]    = graph->verts_pos[v];
-		new_force[s]  = graph->verts_force[v];
-		new_serial[s] = s;
-		new_charge[s] = graph->verts_charge[v];
+#		define X(type,field) new_##field[s] = graph->field[v];
+		EXPAND_FOR_EACH_VERTEX_FIELD(X);
+#		undef X
 	}
 
-	free(graph->verts_pos);
-	free(graph->verts_force);
-	free(graph->verts_serial);
-	free(graph->verts_charge);
-
-	graph->verts_pos    = new_pos;
-	graph->verts_force  = new_force;
-	graph->verts_serial = new_serial;
-	graph->verts_charge = new_charge;
+#	define X(type,field) free(graph->field); graph->field = new_##field;
+	EXPAND_FOR_EACH_VERTEX_FIELD(X);
+#	undef X
 }
 

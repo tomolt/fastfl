@@ -9,10 +9,11 @@ ffl_make_graph(void)
 	FFL_Graph *graph = calloc(1, sizeof (FFL_Graph));
 	graph->nverts = 0;
 	graph->cverts = 16;
-	graph->verts_pos    = calloc(graph->cverts, sizeof *graph->verts_pos);
-	graph->verts_force  = calloc(graph->cverts, sizeof *graph->verts_force);
-	graph->verts_serial = calloc(graph->cverts, sizeof *graph->verts_serial);
-	graph->verts_charge = calloc(graph->cverts, sizeof *graph->verts_charge);
+
+#	define X(type,field) graph->field = calloc(graph->cverts, sizeof (type));
+	EXPAND_FOR_EACH_VERTEX_FIELD(X);
+#	undef X
+
 	graph->nedges = 0;
 	graph->cedges = 16;
 	graph->edges  = calloc(graph->cedges, sizeof *graph->edges);
@@ -22,10 +23,9 @@ ffl_make_graph(void)
 void
 ffl_free_graph(FFL_Graph *graph)
 {
-	free(graph->verts_pos);
-	free(graph->verts_force);
-	free(graph->verts_serial);
-	free(graph->verts_charge);
+#	define X(type,field) free(graph->field);
+	EXPAND_FOR_EACH_VERTEX_FIELD(X);
+#	undef X
 	free(graph->edges);
 	for (int i = 0; i < graph->num_pools; i++) {
 		free(graph->clump_pools[i]);
@@ -39,10 +39,9 @@ ffl_grow_vertices(FFL_Graph *graph, int nverts)
 {
 	if (nverts > graph->cverts) {
 		while (nverts > graph->cverts) graph->cverts *= 2;
-		graph->verts_pos    = reallocarray(graph->verts_pos, graph->cverts, sizeof *graph->verts_pos);
-		graph->verts_force  = reallocarray(graph->verts_force, graph->cverts, sizeof *graph->verts_force);
-		graph->verts_serial = reallocarray(graph->verts_serial, graph->cverts, sizeof *graph->verts_serial);
-		graph->verts_charge = reallocarray(graph->verts_charge, graph->cverts, sizeof *graph->verts_charge);
+#		define X(type,field) graph->field = reallocarray(graph->field, graph->cverts, sizeof (type));
+		EXPAND_FOR_EACH_VERTEX_FIELD(X);
+#		undef X
 	}
 	for (int v = graph->nverts; v < nverts; v++) {
 		graph->verts_pos[v]    = (FFL_Vec2) { 0.0f, 0.0f };

@@ -1,5 +1,11 @@
 #include <stdbool.h>
 
+#define EXPAND_FOR_EACH_VERTEX_FIELD(m)		\
+		m(FFL_Vec2, verts_pos)		\
+		m(FFL_Vec2, verts_force)	\
+		m(int,      verts_serial)	\
+		m(float,    verts_charge)
+
 #define CLUMPS_PER_POOL 64
 
 typedef struct FFL_Vec2   FFL_Vec2;
