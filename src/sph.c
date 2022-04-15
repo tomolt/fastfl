@@ -87,25 +87,25 @@ build_clump(FFL_Graph *graph, int low, int high)
 		clump->is_leaf = false;
 
 		int border = partition(graph, low, high, &cond);
-		clump->nut = build_clump(graph, low, border);
-		clump->geb = build_clump(graph, border, high);
+		clump->child0 = build_clump(graph, low, border);
+		clump->child1 = build_clump(graph, border, high);
 
-		clump->charge = clump->nut->charge + clump->geb->charge;
+		clump->charge = clump->child0->charge + clump->child1->charge;
 
-		clump->com.x  = clump->nut->com.x * clump->nut->charge;
-		clump->com.x += clump->geb->com.x * clump->geb->charge;
+		clump->com.x  = clump->child0->com.x * clump->child0->charge;
+		clump->com.x += clump->child1->com.x * clump->child1->charge;
 		clump->com.x /= clump->charge;
 		
-		clump->com.y  = clump->nut->com.y * clump->nut->charge;
-		clump->com.y += clump->geb->com.y * clump->geb->charge;
+		clump->com.y  = clump->child0->com.y * clump->child0->charge;
+		clump->com.y += clump->child1->com.y * clump->child1->charge;
 		clump->com.y /= clump->charge;
 		
-		float dx0 = clump->nut->com.x - clump->com.x;
-		float dy0 = clump->nut->com.y - clump->com.y;
-		float dx1 = clump->geb->com.x - clump->com.x;
-		float dy1 = clump->geb->com.y - clump->com.y;
-		clump->variance  = sqrtf(dx0 * dx0 + dy0 * dy0) * clump->nut->charge;
-		clump->variance += sqrtf(dx1 * dx1 + dy1 * dy1) * clump->geb->charge;
+		float dx0 = clump->child0->com.x - clump->com.x;
+		float dy0 = clump->child0->com.y - clump->com.y;
+		float dx1 = clump->child1->com.x - clump->com.x;
+		float dy1 = clump->child1->com.y - clump->com.y;
+		clump->variance  = sqrtf(dx0 * dx0 + dy0 * dy0) * clump->child0->charge;
+		clump->variance += sqrtf(dx1 * dx1 + dy1 * dy1) * clump->child1->charge;
 		clump->variance /= clump->charge;
 	} else {
 		clump->is_leaf = true;
@@ -151,8 +151,8 @@ declump_rec(FFL_Graph *graph, FFL_Clump *clump, float force_x, float force_y)
 			graph->verts_force[v].y += force_y;
 		}
 	} else {
-		declump_rec(graph, clump->nut, force_x, force_y);
-		declump_rec(graph, clump->geb, force_x, force_y);
+		declump_rec(graph, clump->child0, force_x, force_y);
+		declump_rec(graph, clump->child1, force_x, force_y);
 	}
 }
 

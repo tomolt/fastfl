@@ -26,8 +26,8 @@ struct FFL_Clump {
 	bool  is_leaf;
 	union {
 		struct {
-			FFL_Clump *nut;
-			FFL_Clump *geb;
+			FFL_Clump *child0;
+			FFL_Clump *child1;
 		};
 		struct {
 			int low;

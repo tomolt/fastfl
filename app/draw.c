@@ -67,10 +67,10 @@ draw_clump(const FFL_Graph *graph, const FFL_Clump *clump, FFL_Image *image)
 		}
 		r = 3;
 	} else {
-		draw_line(image, x, y, clump->nut->com.x, clump->nut->com.y);
-		draw_line(image, x, y, clump->geb->com.x, clump->geb->com.y);
-		int r1 = draw_clump(graph, clump->nut, image);
-		int r2 = draw_clump(graph, clump->geb, image);
+		draw_line(image, x, y, clump->child0->com.x, clump->child0->com.y);
+		draw_line(image, x, y, clump->child1->com.x, clump->child1->com.y);
+		int r1 = draw_clump(graph, clump->child0, image);
+		int r2 = draw_clump(graph, clump->child1, image);
 		r = (r1 > r2 ? r1 : r2) + 1;
 	}
 	draw_rhombus(image, x, y, r);

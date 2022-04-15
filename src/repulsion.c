@@ -48,9 +48,9 @@ repulsion_rec(FFL_Graph *graph, FFL_Clump *c0, FFL_Clump *c1)
 		if (c0->is_leaf) {
 			repulsion_self(graph, c0->low, c0->high);
 		} else {
-			repulsion_rec(graph, c0->nut, c0->nut);
-			repulsion_rec(graph, c0->nut, c0->geb);
-			repulsion_rec(graph, c0->geb, c0->geb);
+			repulsion_rec(graph, c0->child0, c0->child0);
+			repulsion_rec(graph, c0->child0, c0->child1);
+			repulsion_rec(graph, c0->child1, c0->child1);
 		}
 		return;
 	}
@@ -80,12 +80,12 @@ repulsion_rec(FFL_Graph *graph, FFL_Clump *c0, FFL_Clump *c1)
 	/* TODO this conditional works for now, but it's not intuitive at all. */
 	if (!c1->is_leaf && (c0->variance < c1->variance || c0->is_leaf)) {
 		assert(!c1->is_leaf);
-		repulsion_rec(graph, c0, c1->nut);
-		repulsion_rec(graph, c0, c1->geb);
+		repulsion_rec(graph, c0, c1->child0);
+		repulsion_rec(graph, c0, c1->child1);
 	} else {
 		assert(!c0->is_leaf);
-		repulsion_rec(graph, c0->nut, c1);
-		repulsion_rec(graph, c0->geb, c1);
+		repulsion_rec(graph, c0->child0, c1);
+		repulsion_rec(graph, c0->child1, c1);
 	}
 }
 
