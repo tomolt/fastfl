@@ -46,7 +46,8 @@ ffl_spring_forces(FFL_Graph *graph)
 		__asm__ inline ("rcpss %0, %0" : "+v"(dist));
 
 		float factor = 0.5f * graph->spring_strength;
-		factor *= log2f(dist / edge->d_length);
+		factor *= logf(dist / edge->d_length);
+		factor *= edge->d_length;
 		factor *= inv_dist;
 
 		dx *= factor;
@@ -84,14 +85,14 @@ layout_graph(FFL_Graph *graph)
 {
 	printf("Laying out graph of size %d.\n", graph->nverts);
 
-	const int TOTAL_ROUNDS = 50;
-	const float eccentricity = 1.2f;
+	const int TOTAL_ROUNDS = 100;
+	const float eccentricity = 2.0f;
 
 	int rounds = TOTAL_ROUNDS;
 	while (rounds) {
 		float temperature = (float) rounds / TOTAL_ROUNDS;
 		temperature = powf(temperature, eccentricity);
-		temperature *= 3000.0f;
+		temperature *= 2000.0f;
 
 		ffl_spring_forces(graph);
 		ffl_repulsion_accelerated(graph);

@@ -129,7 +129,9 @@ repulsion_rec(FFL_Graph *graph, FFL_Clump *c0, FFL_Clump *c1)
 		float dy = c1->com.y - c0->com.y;
 		float dist_sq = dx * dx + dy * dy;
 
-		float force = graph->repulsion_strength / dist_sq;
+		float inv_dist_sq = dist_sq;
+		__asm__ inline ("rcpss %0, %0" : "+v"(inv_dist_sq));
+		float force = graph->repulsion_strength * inv_dist_sq;
 		dx *= force;
 		dy *= force;
 
