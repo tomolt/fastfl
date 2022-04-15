@@ -1,7 +1,22 @@
 #include <stdlib.h>
+#include <math.h>
 
 #include "graph.h"
 #include "realloc.h"
+
+FFL_Rect
+ffl_bounding_box(FFL_Vec2 *vecs, int low, int high)
+{
+	float min_x = INFINITY, min_y = INFINITY, max_x = -INFINITY, max_y = -INFINITY;
+	for (int v = low; v < high; v++) {
+		FFL_Vec2 vec = vecs[v];
+		if (vec.x < min_x) min_x = vec.x;
+		if (vec.y < min_y) min_y = vec.y;
+		if (vec.x > max_x) max_x = vec.x;
+		if (vec.y > max_y) max_y = vec.y;
+	}
+	return (FFL_Rect) { { min_x, min_y }, { max_x, max_y } };
+}
 
 FFL_Graph *
 ffl_make_graph(void)

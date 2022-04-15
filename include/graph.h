@@ -9,6 +9,7 @@
 #define CLUMPS_PER_POOL 64
 
 typedef struct FFL_Vec2   FFL_Vec2;
+typedef struct FFL_Rect   FFL_Rect;
 typedef struct FFL_Edge   FFL_Edge;
 typedef struct FFL_Clump  FFL_Clump;
 typedef struct FFL_Graph  FFL_Graph;
@@ -16,6 +17,11 @@ typedef struct FFL_Graph  FFL_Graph;
 struct FFL_Vec2 {
 	float x;
 	float y;
+};
+
+struct FFL_Rect {
+	FFL_Vec2 min;
+	FFL_Vec2 max;
 };
 
 struct FFL_Edge {
@@ -64,6 +70,8 @@ struct FFL_Graph {
 	int         num_pools;
 	int         next_clump;
 };
+
+FFL_Rect ffl_bounding_box(FFL_Vec2 *vecs, int low, int high);
 
 FFL_Graph *ffl_make_graph(void);
 void ffl_free_graph(FFL_Graph *graph);
