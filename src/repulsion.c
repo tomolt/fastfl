@@ -6,8 +6,6 @@
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 
 extern void ffl_repulsion_2on2(FFL_Graph *graph, int i, int j);
-extern void ffl_repulsion_1onN(FFL_Graph *graph, int t, int low, int high);
-extern void ffl_repulsion_naive(FFL_Graph *graph);
 
 static inline bool
 approximation_heuristic(const FFL_Rect *rect0, const FFL_Rect *rect1, float accuracy)
@@ -40,6 +38,41 @@ compare_rect_area(const FFL_Rect *rect0, const FFL_Rect *rect1)
 	float a1 = (rect1->max.x - rect1->min.x) *
 		(rect1->max.y - rect1->min.y);
 	return a0 - a1 < 0.0f ? -1 : 1;
+}
+
+void
+ffl_repulsion_1onN(FFL_Graph *graph, int t, int low, int high)
+{
+	FFL_Vec2 target = graph->verts_pos[t];
+	for (int s = low; s < high; s++) {
+		FFL_Vec2 source = graph->verts_pos[s];
+
+		float dx = target.x - source.x;
+		float dy = target.y - source.y;
+		float dist_sq = dx * dx + dy * dy;
+		if (dist_sq == 0.0f) continue;
+
+		float inv_dist_sq = dist_sq;
+		__asm__ inline ("rcpss %0, %0" : "+v"(inv_dist_sq));
+
+		float force = graph->repulsion_strength * inv_dist_sq;
+		dx *= force;
+		dy *= force;
+
+		graph->verts_force[s].x -= dx * graph->verts_charge[t];
+		graph->verts_force[s].y -= dy * graph->verts_charge[t];
+
+		graph->verts_force[t].x += dx * graph->verts_charge[s];
+		graph->verts_force[t].y += dy * graph->verts_charge[s];
+	}
+}
+
+void
+ffl_repulsion_naive(FFL_Graph *graph)
+{
+	for (int t = 0; t < graph->nverts; t++) {
+		ffl_repulsion_1onN(graph, t, 0, t);
+	}
 }
 
 static void
