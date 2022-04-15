@@ -3,4 +3,5 @@ out.pgm
 
 perf.data*
 cachegrind.*
+dhat.*
 
