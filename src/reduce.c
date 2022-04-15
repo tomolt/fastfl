@@ -65,7 +65,7 @@ transfer_edges(const FFL_Graph *graph, const int *mapping, FFL_Graph *reduced)
 FFL_Graph *
 ffl_reduce_graph(const FFL_Graph *graph, int *mapping)
 {
-	if (graph->nverts < 16) {
+	if (graph->nverts <= 3) {
 		return NULL;
 	}
 
