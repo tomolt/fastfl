@@ -1,0 +1,33 @@
+fastfl
+======
+
+Statt sequentieller Auswertung der Kräfte wird in Runden simuliert:
+Erst Kräfte berechnen, dann anwenden. Das entfernt Abhängigkeit von der Reihenfolge
+und macht das ganze parallelisierbar.
+
+Parallelisierung sowohl mit SIMD (SSE/AVX auf x86) als auch Multithreading (per OpenMP) möglich.
+
+Rückstellkraftfunktion muss so aufgestellt sein, dass sie nicht überschießt.
+Lineare (Hookesche) Federn sind leider sehr nachgiebig, aber immerhin oszilliern
+sie nicht für D <= 1.
+
+Coulomb-Kräfte werden mit Fast Multipole Method berechnet.
+Für Multipole-Expansion der Coulomb-Kraft siehe:
+https://phys.libretexts.org/Bookshelves/Mathematical_Physics_and_Pedagogy/Mathematical_Methods/The_Multipole_Expansion
+
+Quad-Tree hat viele Randfälle wenn Knoten eng zusammen liegen.
+kd-Trees sind robuster. Wegen Rundenauswertung kann die SPH in bulk aufgebaut werden!
+
+Typische FMMM Kräftesummierung entspricht Euler-Verfahren.
+Instabil für oszillierende Systeme, erhält Energie nicht!!!
+klassisches Runge-Kutta ist besser, braucht aber viele Auswertungen und erhält ebenfalls die Energie nicht.
+Vielleicht leapfrog-Integration?
+
+Graph-Kontraktion für Multilevel Verfahren ist für den Anfang Kantenkontraktion auf Matching.
+Später bessere Kontraktionsverfahren denkbar.
+
+Pseudozufallsgenerator ist PCG. Sehr schnell auszuwerten, zerfällt aber nicht wie LCG
+in einzelne Ebenen.
+
+Weitere Optimierungen sind Graph-Darstellung als Structure-of-Arrays, Software-Prefetching der Knoten von Kanten,
+Pool-Allokation von kd-Tree Knoten.
